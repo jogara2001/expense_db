@@ -11,8 +11,6 @@ jobs:
         python-version: ["3.9"]
     environment: PYTEST
     env:
-      SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       POSTGRES_SERVER: ${{ secrets.POSTGRES_SERVER }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}

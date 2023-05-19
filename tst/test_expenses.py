@@ -26,7 +26,8 @@ def test_get_expense_error():
 
 def test_list_expenses():
     # sample for list_expense : /user/{user_id}/expenses
-    response = client.get(f"/user/{EXPENSE_TEST_USER}/expenses")
+    response = client.get(
+        f"/user/{EXPENSE_TEST_USER}/expenses?start_date=2023-05-1%2001%3A05%3A29&end_date=2023-05-10%2001%3A05%3A29")
     assert response.status_code == 200
 
     with open("tst/expenses/26-expenses-list.json", encoding="utf-8") as f:
