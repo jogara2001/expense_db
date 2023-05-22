@@ -7,3 +7,4 @@ python-dotenv~=1.0.0
 pre-commit
 supabase
 pydantic~=1.10.7
+alembic~=1.11.1
