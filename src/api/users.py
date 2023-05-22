@@ -53,6 +53,7 @@ def get_user(user_id: int):
 
 class UserJson(BaseModel):
     name: str
+    password: str
 
 
 @router.post("/users/", tags=["users"])
@@ -67,9 +68,10 @@ def create_user(user: UserJson):
     with db.engine.connect() as conn:
         inserted_user = conn.execute(
             sqlalchemy.text(
-                'INSERT INTO "user" (name) VALUES (:name) RETURNING user_id'
+                'INSERT INTO "user" (name) VALUES (:name, crypt(\':password\', gen_salt(\'bf\'))) RETURNING user_id'
             ),
-            [{"name": user.name}]
+            [{"name": user.name,
+             "password": user.password}]
         )
         user_id = inserted_user.fetchone().user_id
         conn.commit()

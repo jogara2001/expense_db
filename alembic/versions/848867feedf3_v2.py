@@ -17,6 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.execute("CREATE EXTENSION pgcrypto;")
     op.create_table(
         "user",
         sa.Column("user_id", sa.BIGINT, autoincrement=True, primary_key=True),
