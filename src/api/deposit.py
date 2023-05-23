@@ -23,18 +23,18 @@ def list_deposits(
     """
     This endpoint lists the deposits for a user
 
-    :param user_id: the user to query
-    :param password: the password for the user
-    :param start_date: the start date for the query (optional
-    :param end_date: the end date for the query (optional)
-    :param limit: the maximum number of results to return
-    :param offset: the number of results to skip
-    :return: a list of deposits
+    - `user_id`: the user to query
+    - `password`: the password for the user
+    - `start_date`: the start date for the query (optional
+    - `end_date`: the end date for the query (optional)
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+    `return`: a list of deposits
 
     Each deposit is represented by
-    - deposit_id: the deposit
-    - amount: the amount of the deposit
-    - timestamp: the timestamp of the deposit
+    - `deposit_id`: the deposit
+    - `amount`: the amount of the deposit
+    - `timestamp`: the timestamp of the deposit
     """
     authenticate(user_id, password)
 
@@ -79,12 +79,12 @@ def add_deposit(
     """
     This endpoint adds a deposit to the user specified
 
-    :param user_id: the user to add the deposit to
-    :param password: the password for the user
-    :param deposit: an object consisting of the following
-        - amount: the amount of the deposit
-        - timestamp: the timestamp of the deposit
-    :return: the resulting deposit entry
+    - `user_id`: the user to add the deposit to
+    - `password`: the password for the user
+    - `deposit`: an object consisting of the following
+        - `amount`: the amount of the deposit
+        - `timestamp`: the timestamp of the deposit
+    return`: the resulting deposit entry
     """
     authenticate(user_id, password)
 
