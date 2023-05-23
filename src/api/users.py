@@ -15,20 +15,14 @@ def list_users(
         offset: int = Query(0, ge=0),
 ):
     """
-    This endpoint returns the information associated with all users.
-    For each user it returns:
+    This lists the users (primarily used for debugging purposes)
 
-    - `user_id`: the ID of the user
-    - `name`: the name of the user
-
-    You can filter for users whose name contain a string by using the
-    `name` query parameter.
-
-    The `limit` and `offset` query
-    parameters are used for pagination. The `limit` query parameter specifies the
-    maximum number of results to return. The `offset` query parameter specifies the
-    number of results to skip before returning results.
+    :param name: filter for name of user
+    :param limit: the maximum number of results to return
+    :param offset: the number of results to skip
+    :return: a list of users
     """
+
     with db.engine.connect() as conn:
         query = 'SELECT user_id, name FROM "user"'
         parameters = {
@@ -62,12 +56,15 @@ def get_user(
 ):
     """
     This endpoint returns the information associated with a user by its identifier.
-    For each user it returns:
 
-    - `user_id`: the ID of the user
-    - `name`: the name of the user
-    - `balance`: the total balance of their account
+    :param user_id: the ID of the user
+    :param password: the users password
+    :return: the specified user
+        - `user_id`: the ID of the user
+        - `name`: the name of the user
+        - `balance`: the total balance of their account
     """
+
     authenticate(user_id, password)
 
     with db.engine.connect() as conn:
@@ -105,9 +102,10 @@ def create_user(user: UserJson):
     """
     This endpoint creates a new user.
 
-    Takes in a UserJson which contains the user's name and password.
-
-    Returns the user's ID and name if successful.
+    :param user: an object consisting of the following
+        - name: the name of the user (must be unique)
+        - password: the password for the user
+    :return: the resulting user entry
     """
     if not username_unique(user.name):
         raise HTTPException(status_code=404, detail="name already taken")
