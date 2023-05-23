@@ -1,4 +1,3 @@
-import json
 import random
 from datetime import datetime, timedelta
 import uuid
@@ -241,7 +240,7 @@ def test_list_budget_wrong_password():
         "start_date": str(datetime.utcnow().date()),
         "end_date": str(datetime.utcnow().date() + timedelta(days=7))
     }
-    budget_response_one = client.post(
+    client.post(
         f"/users/{user_id}/categories/{category_id}/budget"
         f"?password={new_user['password']}",
         json=new_budget_one
@@ -252,7 +251,7 @@ def test_list_budget_wrong_password():
         "start_date": str(datetime.utcnow().date()),
         "end_date": str(datetime.utcnow().date() + timedelta(days=7))
     }
-    budget_response_two = client.post(
+    client.post(
         f"/users/{user_id}/categories/{category_id}/budget"
         f"?password={new_user['password']}",
         json=new_budget_two
