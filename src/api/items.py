@@ -12,7 +12,8 @@ router = APIRouter()
 @router.get("/users/{user_id}/expenses/{expense_id}/items/{item_id}", tags=["items"])
 def get_item(user_id: int, expense_id: int, item_id: int, password: str):
     """
-    This endpoint returns the information for a specific item associated with a specific expense for a specific user.
+    This endpoint returns the information for a specific item
+    associated with a specific expense for a specific user.
 
     - `user_id`: the id of the user
     - `expense_id`: the id of the expense
@@ -48,9 +49,16 @@ def get_item(user_id: int, expense_id: int, item_id: int, password: str):
 
 
 @router.get("/users/{user_id}/expenses/{expense_id}/items", tags=["items"])
-def list_items(user_id: int, expense_id: int, password: str, limit: int = 10, offset: int = 0):
+def list_items(
+    user_id: int,
+    expense_id: int,
+    password: str,
+    limit: int = 10,
+    offset: int = 0
+):
     """
-    This endpoint returns the information for all items associated with a specific expense for a specific user.
+    This endpoint returns the information for all items
+    associated with a specific expense for a specific user.
 
     - `user_id`: the id of the user
     - `expense_id`: the id of the expense
@@ -94,7 +102,8 @@ class ItemJson(BaseModel):
 @router.post("/users/{user_id}/expenses/{expense_id}/items", tags=["items"])
 def create_item(user_id: int, expense_id: int, password: str, item_json: ItemJson):
     """
-    This endpoint creates a new item associated with a specific expense for a specific user.
+    This endpoint creates a new item associated
+    with a specific expense for a specific user.
 
     The columns that the item table has are:
     - `item_id`: the id of the item
