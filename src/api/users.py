@@ -105,7 +105,7 @@ def create_user(user: UserJson):
     """
     This endpoint creates a new user.
 
-    Takes in a UserJson which contains the user's name.
+    Takes in a UserJson which contains the user's name and password.
 
     Returns the user's ID and name if successful.
     """

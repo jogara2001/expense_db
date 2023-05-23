@@ -20,6 +20,22 @@ def list_deposits(
         limit: int = Query(50, ge=1, le=250),
         offset: int = Query(0, ge=0)
 ):
+    """
+    This endpoint lists the deposits for a user
+
+    :param user_id: the user to query
+    :param password: the password for the user
+    :param start_date: the start date for the query (optional
+    :param end_date: the end date for the query (optional)
+    :param limit: the maximum number of results to return
+    :param offset: the number of results to skip
+    :return: a list of deposits
+
+    Each deposit is represented by
+    - deposit_id: the deposit
+    - amount: the amount of the deposit
+    - timestamp: the timestamp of the deposit
+    """
     authenticate(user_id, password)
 
     with db.engine.connect() as conn:
@@ -60,6 +76,16 @@ def add_deposit(
         password: str,
         deposit: DepositJson,
 ):
+    """
+    This endpoint adds a deposit to the user specified
+
+    :param user_id: the user to add the deposit to
+    :param password: the password for the user
+    :param deposit: an object consisting of the following
+        - amount: the amount of the deposit
+        - timestamp: the timestamp of the deposit
+    :return: the resulting deposit entry
+    """
     authenticate(user_id, password)
 
     with db.engine.connect() as conn:
