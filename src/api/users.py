@@ -73,7 +73,9 @@ def get_user(
     with db.engine.connect() as conn:
         user = conn.execute(
             sqlalchemy.text('''
-            select "user".user_id, "user".name, (COALESCE(sum(deposit.amount), 0.00) - COALESCE(sum(item.cost), 0.00)) as balance from "user"
+            select "user".user_id, "user".name, 
+            (COALESCE(sum(deposit.amount), 0.00) - COALESCE(sum(item.cost), 0.00)) as balance 
+            from "user"
             left JOIN category ON category.user_id = "user".user_id
             left JOIN expense ON expense.category_id = category.category_id
             left JOIN item on item.expense_id = expense.expense_id
