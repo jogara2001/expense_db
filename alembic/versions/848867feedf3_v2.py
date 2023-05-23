@@ -1,10 +1,3 @@
-"""v2
-
-Revision ID: 848867feedf3
-Revises: 257db456f6bc
-Create Date: 2023-05-18 18:51:34.264367
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import ForeignKey
