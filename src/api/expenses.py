@@ -57,10 +57,9 @@ def list_expenses(user_id: int,
                   password: str,
                   limit: int = 10,
                   offset: int = 0,
-                  start_date: datetime.datetime = (
-                      datetime.datetime.utcnow() - datetime.timedelta(days=7)
-                  ),
-                  end_date: datetime.datetime = datetime.datetime.utcnow()
+                  start_date: datetime.date =
+                  datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
+                  end_date: datetime.date = datetime.datetime.utcnow().date(),
                   ):
     """
     This endpoint returns the information associated with expenses
@@ -89,7 +88,7 @@ def list_expenses(user_id: int,
                 LEFT JOIN item
                 ON expense.expense_id = item.expense_id
                 WHERE category.user_id = :user_id
-                AND timestamp >= :start_date AND timestamp <= :end_date
+                AND date(timestamp) BETWEEN :start_date and :end_date
                 GROUP BY expense.expense_id, category.category_id,
                 timestamp, description
                 LIMIT :limit
