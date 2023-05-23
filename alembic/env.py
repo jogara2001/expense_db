@@ -19,7 +19,8 @@ DB_NAME: str = os.environ.get("POSTGRES_DB")
 
 config.set_section_option(
     config.config_ini_section, "sqlalchemy.url",
-    f"postgresql://{DB_USER}:{DB_PASSWD}@{DB_SERVER}:{DB_PORT}/{DB_NAME}".replace('%', '%%')
+    f"postgresql://{DB_USER}:{DB_PASSWD}@{DB_SERVER}:{DB_PORT}/{DB_NAME}"
+    .replace('%', '%%')
 )
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
