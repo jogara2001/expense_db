@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi.testclient import TestClient
 
 from src.api.server import app
@@ -11,9 +13,19 @@ def test_users():
 
 
 def test_users_by_id():
-    response = client.get("/users/9/")
+    name = str(uuid.uuid4())
+    data = {
+        "name": name,
+        "password": "test"
+    }
+
+    postResponse = client.post("/users/", json=data)
+    assert postResponse.status_code == 200
+    user_id = postResponse.json()["user_id"]
+
+    response = client.get(f"/users/{user_id}/")
     assert response.status_code == 200
-    assert response.json() == {"user_id": 9, "name": "testing"}
+    assert response.json() == {"user_id": user_id, "name": name}
 
 
 def test_users_by_id2():
@@ -22,12 +34,30 @@ def test_users_by_id2():
     assert response.json() == {"detail": "user not found."}
 
 
-def test_basic_user_post():
+def test_list_users():
+    name = str(uuid.uuid4())
     data = {
-        "name": "test_user"
+        "name": name,
+        "password": "test"
+    }
+
+    postResponse = client.post("/users/", json=data)
+    assert postResponse.status_code == 200
+    user_id = postResponse.json()["user_id"]
+
+    response = client.get(f"/users/?name={name}&limit=1&offset=0")
+    assert response.status_code == 200
+    assert response.json() == [{"user_id": user_id, "name": name}]
+
+
+def test_basic_user_post():
+    name = str(uuid.uuid4())
+    data = {
+        "name": name,
+        "password": "test"
     }
 
     postResponse = client.post("/users/", json=data)
     assert postResponse.status_code == 200
     assert "user_id" in postResponse.json()
-    assert postResponse.json()["user_name"] == "test_user"
+    assert postResponse.json()["name"] == name
