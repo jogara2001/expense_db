@@ -1,5 +1,5 @@
-import json
-from datetime import datetime
+from datetime import datetime, timezone
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -7,78 +7,254 @@ from src.api.server import app
 
 client = TestClient(app)
 
-EXPENSE_TEST_USER = 26
-EXPENSE_TEST_USER_POSTS = 29
+
+def test_post_expense():
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
+    }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
+
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
+    )
+
+    new_expense = {
+        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
+        "category_id": category_response.json()["category_id"],
+        "description": "string"
+    }
+    expense_response = client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense
+    )
+
+    assert expense_response.status_code == 200
+    assert expense_response.json()["category_id"] == new_expense["category_id"]
+    assert expense_response.json()["description"] == new_expense["description"]
+
+
+def test_post_expense_wrong_password():
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
+    }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
+
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
+    )
+
+    new_expense = {
+        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
+        "category_id": category_response.json()["category_id"],
+        "description": "string"
+    }
+    expense_response = client.post(
+        f"/users/{user_id}/expenses/?password=wrong",
+        json=new_expense
+    )
+
+    assert expense_response.status_code == 401
+
 
 def test_get_expense():
-    response = client.get(f"/user/{EXPENSE_TEST_USER}/expense/5")
-    assert response.status_code == 200
-
-    with open("tst/expenses/26-expenses-5.json", encoding="utf-8") as f:
-        assert response.json() == json.load(f)
-
-
-def test_get_expense_error():
-    response = client.get(f"/user/{EXPENSE_TEST_USER}/expense/999999")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "expense not found."}
-
-
-def test_list_expenses():
-    # sample for list_expense : /user/{user_id}/expenses
-    response = client.get(
-        f"/user/{EXPENSE_TEST_USER}/expenses?start_date=2023-05-1%2001%3A05%3A29&end_date=2023-05-10%2001%3A05%3A29")
-    assert response.status_code == 200
-
-    with open("tst/expenses/26-expenses-list.json", encoding="utf-8") as f:
-        assert response.json() == json.load(f)
-
-
-def test_list_expenses_error():
-    response = client.get("/user/999999/expense/999999")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "user not found."}
-
-
-def test_add_expense_new():
-    data = {
-      "cost": 25,
-      "date_time": "2023-05-08 14:19:45",
-      "category_id": 16,
-      "description": "string"
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
     }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
 
-    post_response = client.post(
-        f"/user/{EXPENSE_TEST_USER_POSTS}/expense/",
-        json=data
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
     )
-    assert post_response.status_code == 200
-    assert post_response.json()["category_id"] == data["category_id"]
-    assert post_response.json()["date_time"] == data["date_time"]
-    assert post_response.json()["cost"] == data["cost"]
-    assert post_response.json()["description"] == data["description"]
-    expense_id = post_response.json()["expense_id"]
-    dt = datetime.strptime(data["date_time"], '%Y-%m-%d %H:%M:%S')
-    formatted_dt = dt.strftime('%Y-%m-%dT%H:%M:%S+00:00')
-    
-    response = client.get(f"/user/{EXPENSE_TEST_USER_POSTS}/expense/{expense_id}")
-    assert response.status_code == 200
-    assert response.json()["expense_id"] == expense_id
-    assert response.json()["date_time"] == formatted_dt
-    assert response.json()["cost"] == data["cost"]
-    assert response.json()["description"] == data["description"]
 
-def test_add_expense_error():
-    data = {
-      "cost": 25,
-      "date_time": "2023-05-08 14:19:45",
-      "category_id": 999999999,
-      "description": "string"
+    new_expense = {
+        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
+        "category_id": category_response.json()["category_id"],
+        "description": "string"
     }
-
-    post_response = client.post(
-        f"/user/{EXPENSE_TEST_USER_POSTS}/expense/",
-        json=data
+    expense_response = client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense
     )
-    assert post_response.status_code == 404
-    assert post_response.json() == {"detail": "budget category not found."}
+    expense_id = expense_response.json()["expense_id"]
+
+    get_expense_response = client.get(
+        f"/users/{user_id}/expenses/{expense_id}/?password={new_user['password']}"
+    )
+
+    assert get_expense_response.status_code == 200
+    assert get_expense_response.json()["expense_id"] == expense_id
+    assert get_expense_response.json(
+    )["category"] == new_category["category_name"]
+    assert get_expense_response.json(
+    )["description"] == new_expense["description"]
+    assert get_expense_response.json()["cost"] == 0.0
+
+    new_item = {
+        "name": "test_item",
+        "cost": 25,
+    }
+    client.post(
+        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        json=new_item
+    )
+
+    get_expense_response = client.get(
+        f"/users/{user_id}/expenses/{expense_id}/?password={new_user['password']}"
+    )
+
+    assert get_expense_response.json()["cost"] == 25.0
+
+
+def test_get_expense_wrong_password():
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
+    }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
+
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
+    )
+
+    new_expense = {
+        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
+        "category_id": category_response.json()["category_id"],
+        "description": "string"
+    }
+    expense_response = client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense
+    )
+    expense_id = expense_response.json()["expense_id"]
+
+    get_expense_response = client.get(
+        f"/users/{user_id}/expenses/{expense_id}/?password=wrong"
+    )
+
+    assert get_expense_response.status_code == 401
+
+
+def test_list_expense():
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
+    }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
+
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
+    )
+
+    new_expense_one = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_1"
+    }
+    client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_one
+    )
+
+    new_expense_two = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_2"
+    }
+    response_two = client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_two
+    )
+
+    new_expense_three = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_3"
+    }
+    response_three = client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_three
+    )
+
+    list_expense_response = client.get(
+        f"/users/{user_id}/expenses?password={new_user['password']}&limit=2&offset=1"
+    )
+
+    assert list_expense_response.status_code == 200
+    assert len(list_expense_response.json()) == 2
+    assert list_expense_response.json()[0]["expense_id"] == response_two.json()[
+        "expense_id"]
+    assert list_expense_response.json()[1]["expense_id"] == response_three.json()[
+        "expense_id"]
+    assert list_expense_response.json(
+    )[0]["description"] == new_expense_two["description"]
+    assert list_expense_response.json(
+    )[1]["description"] == new_expense_three["description"]
+
+
+def test_list_expense_wrong_password():
+    new_user = {
+        "name": str(uuid.uuid4()),
+        "password": "test_password",
+    }
+    user_response = client.post("/users/", json=new_user)
+    user_id = user_response.json()["user_id"]
+
+    new_category = {"category_name": "test_category"}
+    category_response = client.post(
+        f"/users/{user_id}/category/?password={new_user['password']}",
+        json=new_category
+    )
+
+    new_expense_one = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_1"
+    }
+    client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_one
+    )
+
+    new_expense_two = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_2"
+    }
+    client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_two
+    )
+
+    new_expense_three = {
+        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "category_id": category_response.json()["category_id"],
+        "description": "string_3"
+    }
+    client.post(
+        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        json=new_expense_three
+    )
+
+    list_expense_response = client.get(
+        f"/users/{user_id}/expenses?password=wrong&limit=2&offset=1"
+    )
+
+    assert list_expense_response.status_code == 401
