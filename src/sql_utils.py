@@ -1,6 +1,7 @@
 import sqlalchemy
 from fastapi import HTTPException
 from src import database as db
+from pydantic import BaseModel
 
 
 def get_user(user_id: int):
@@ -30,7 +31,7 @@ def get_category(user_id: int, budget_category_id: int):
     with db.engine.connect() as conn:
         category_user = conn.execute(
             sqlalchemy.text('''
-            SELECT * FROM budget_category
+            SELECT * FROM category
             WHERE user_id = :user_id
             AND category_id = :category_id
             '''),
@@ -38,7 +39,7 @@ def get_category(user_id: int, budget_category_id: int):
         ).fetchone()
         if category_user is None:
             raise HTTPException(
-                status_code=404, detail="budget category not found.")
+                status_code=404, detail="category not found.")
     return category_user
 
 
@@ -72,3 +73,5 @@ def authenticate(user_id: int, password: str):
         if len(users) != 1:
             raise HTTPException(status_code=401, detail="password incorrect")
 
+class PasswordJson(BaseModel):
+    password: str
