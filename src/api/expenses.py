@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy
 from fastapi import APIRouter
 from pydantic import BaseModel
+from fastapi import HTTPException
 
 from src import database as db
 from src import sql_utils as utils
@@ -23,23 +24,37 @@ def get_expense(user_id: int, expense_id: int):
     - `category`: the user defined category of the item
     - `description`: the user defined description of the item
     """
-    user = utils.get_user(user_id)
-    expense_id, category_id, date_time, cost, description = utils.get_expense(
-        expense_id)
-    category = utils.get_category(user.user_id, category_id)
+    with db.engine.connect() as conn:
+        expense_data = conn.execute(
+            sqlalchemy.text('''
+            SELECT expense.expense_id, category.category_name, timestamp,
+            SUM(item.cost) AS cost, description
+            FROM expense
+            INNER JOIN category
+            ON expense.category_id = category.category_id
+            INNER JOIN item
+            ON expense.expense_id = item.expense_id
+            WHERE expense.expense_id = :expense_id
+            AND category.user_id = :user_id
+            GROUP BY expense.expense_id, category.category_id, timestamp, description;
+            '''),
+            {"expense_id": expense_id, "user_id": user_id}
+        ).fetchone()
+        if not expense_data:
+            raise HTTPException(status_code=404, detail="expense not found.")
     return {
-        "cost": cost,
-        "date_time": date_time,
-        "expense_id": expense_id,
-        "category": category.category_name,
-        "description": description,
+        "cost": expense_data.cost,
+        "date_time": expense_data.timestamp,
+        "expense_id": expense_data.expense_id,
+        "category": expense_data.category_name,
+        "description": expense_data.description,
     }
 
 
 @router.get("/user/{user_id}/expenses", tags=["expenses"])
 def list_expenses(user_id: int,
                   start_date: str = (
-                          datetime.datetime.utcnow() - datetime.timedelta(days=7)
+                      datetime.datetime.utcnow() - datetime.timedelta(days=7)
                   ).strftime("%Y-%m-%d %H:%M:%S"),
                   end_date: str = datetime.datetime
                   .utcnow().strftime("%Y-%m-%d %H:%M:%S")):
@@ -57,21 +72,24 @@ def list_expenses(user_id: int,
     - `expense_id`: the ID of the item associated with the expense
     - `category`: the user-defined category of the item
     """
-
-    with db.engine.connect() as conn:
-        expenses = conn.execute(sqlalchemy.text(
-            '''
-            SELECT expense_id, budget_category.category_id, 
-            date_time, cost, description, category_name
-            FROM expense
-            JOIN budget_category on budget_category.category_id = expense.category_id
-            JOIN "user" on "user".user_id = budget_category.user_id
-            WHERE "user".user_id = :user_id_input
-            AND date_time <= :end_date AND date_time >= :start_date;
-            ''',
-        ),
+    with db.engine.begin() as conn:
+        expenses = conn.execute(
+            sqlalchemy.text(
+                '''
+                SELECT expense.expense_id, category.category_name, timestamp,
+                SUM(item.cost) AS cost, description
+                FROM expense
+                INNER JOIN category
+                ON expense.category_id = category.category_id
+                INNER JOIN item
+                ON expense.expense_id = item.expense_id
+                WHERE category.user_id = :user_id
+                AND timestamp <= :end_date AND timestamp >= :start_date
+                GROUP BY expense.expense_id, category.category_id, timestamp, description;
+                ''',
+            ),
             {
-                "user_id_input": user_id,
+                "user_id": user_id,
                 "end_date": end_date,
                 "start_date": start_date,
             }
@@ -80,7 +98,7 @@ def list_expenses(user_id: int,
             {
                 "expense_id": expense.expense_id,
                 "cost": expense.cost,
-                "date_time": expense.date_time,
+                "date_time": expense.timestamp,
                 "description": expense.description,
                 "category": expense.category_name,
             }
@@ -90,7 +108,6 @@ def list_expenses(user_id: int,
 
 # Expects format "YYYY-MM-DD HH:MM:SS" for timestamp
 class ExpenseJson(BaseModel):
-    cost: float
     date_time: str
     category_id: int
     description: str
@@ -109,32 +126,27 @@ def add_expense(user_id: int, expense_json: ExpenseJson):
     - `category_id`: the budget category of the item (required)
     - `description`: the user defined description of the item (not required)
     """
-
     # check user has category specified
     get_category(user_id, expense_json.category_id)
-
-    with db.engine.connect() as conn:
+    with db.engine.begin() as conn:
         inserted_expense = conn.execute(
             sqlalchemy.text(
                 '''
-                INSERT INTO expense (category_id, date_time, cost, description)
-                VALUES (:category_id, :date_time, :cost, :description)
-                RETURNING expense_id;
+            INSERT into expense (timestamp, category_id, description)
+            VALUES (:date_time, :category_id, :description)
+            RETURNING expense_id;
             '''
             ),
             {
-                "category_id": expense_json.category_id,
                 "date_time": expense_json.date_time,
-                "cost": expense_json.cost,
+                "category_id": expense_json.category_id,
                 "description": expense_json.description
             }
         )
-        expense = inserted_expense.fetchone()
-        conn.commit()
+    expense = inserted_expense.fetchone()
     return {
         "expense_id": expense.expense_id,
         "category_id": expense_json.category_id,
         "date_time": expense_json.date_time,
-        "cost": expense_json.cost,
         "description": expense_json.description,
     }

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import budget, users, expenses
+from src.api import budget, users, expenses, items
 
 
 description = ""
@@ -20,6 +20,7 @@ app = FastAPI(
 app.include_router(users.router)
 app.include_router(budget.router)
 app.include_router(expenses.router)
+app.include_router(items.router)
 
 @app.get("/")
 async def root():
