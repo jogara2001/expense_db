@@ -26,7 +26,8 @@ def test_list_deposit():
         "timestamp": timestamp
     }
 
-    postResponse = client.post(f"/user/{user_id}/deposits/?password={password}", json=data2)
+    postResponse = client.post(
+        f"/user/{user_id}/deposits/?password={password}", json=data2)
     assert postResponse.status_code == 200
 
     response = client.get(
@@ -76,7 +77,8 @@ def test_post_deposit():
         "timestamp": timestamp
     }
 
-    postResponse = client.post(f"/user/{user_id}/deposits/?password={password}", json=data2)
+    postResponse = client.post(
+        f"/user/{user_id}/deposits/?password={password}", json=data2)
     assert postResponse.status_code == 200
     assert postResponse.json()["user_id"] == user_id
     assert postResponse.json()["amount"] == 100

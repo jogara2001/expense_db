@@ -14,7 +14,8 @@ router = APIRouter()
 def list_deposits(
         user_id: int,
         password: str,
-        start_date: datetime.date = datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
+        start_date: datetime.date =
+        datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
         end_date: datetime.date = datetime.datetime.utcnow().date(),
         limit: int = Query(50, ge=1, le=250),
         offset: int = Query(0, ge=0)
