@@ -70,16 +70,28 @@ def get_user(
     with db.engine.connect() as conn:
         user = conn.execute(
             sqlalchemy.text('''
-            select "user".user_id, "user".name, 
-            (COALESCE(sum(deposit.amount), 0.00) - COALESCE(sum(item.cost), 0.00)) 
-            as balance 
+            select deposits.user_id, deposits.name, deposits_sum - costs_sum as balance
+            from
+            
+            (select "user".user_id, "user".name, 
+            COALESCE(sum(deposit.amount), 0) as deposits_sum
+            from "user"
+            left JOIN deposit on deposit.user_id = "user".user_id
+            WHERE "user".user_id = :user_id
+            GROUP BY "user".user_id, "user".name) deposits
+            
+            join
+            
+            (select "user".user_id, "user".name,
+            COALESCE(sum(item.cost), 0) as costs_sum
             from "user"
             left JOIN category ON category.user_id = "user".user_id
             left JOIN expense ON expense.category_id = category.category_id
             left JOIN item on item.expense_id = expense.expense_id
-            left JOIN deposit on deposit.user_id = "user".user_id
             WHERE "user".user_id = :user_id
-            GROUP BY "user".user_id, "user".name
+            GROUP BY "user".user_id, "user".name) costs
+            
+            on deposits.user_id = costs.user_id
             '''),
             {"user_id": user_id}
         ).fetchone()
