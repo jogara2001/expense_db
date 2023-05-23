@@ -4,13 +4,13 @@ from pydantic import BaseModel
 from fastapi import HTTPException
 
 from src import database as db
-from src.sql_utils import get_category, get_user
+from src.sql_utils import get_category, get_user, authenticate
 
 router = APIRouter()
 
 
-@router.get("/users/{user_id}/expense/{expense_id}/item/{item_id}", tags=["items"])
-def get_item(user_id: int, expense_id: int, item_id: int):
+@router.get("/users/{user_id}/expenses/{expense_id}/items/{item_id}", tags=["items"])
+def get_item(user_id: int, expense_id: int, item_id: int, password: str):
     """
     This endpoint returns the information for a specific item associated with a specific expense for a specific user.
 
@@ -20,6 +20,7 @@ def get_item(user_id: int, expense_id: int, item_id: int):
     - `item_name`: the name of the item
     - `cost`: the monetary value of the item, in dollars
     """
+    authenticate(user_id, password)
     with db.engine.connect() as conn:
         item_data = conn.execute(
             sqlalchemy.text('''
@@ -47,7 +48,7 @@ def get_item(user_id: int, expense_id: int, item_id: int):
 
 
 @router.get("/users/{user_id}/expenses/{expense_id}/items", tags=["items"])
-def list_items(user_id: int, expense_id: int, limit: int = 10, offset: int = 0):
+def list_items(user_id: int, expense_id: int, password: str, limit: int = 10, offset: int = 0):
     """
     This endpoint returns the information for all items associated with a specific expense for a specific user.
 
@@ -57,6 +58,7 @@ def list_items(user_id: int, expense_id: int, limit: int = 10, offset: int = 0):
     - `item_name`: the name of the item
     - `cost`: the monetary value of the item, in dollars
     """
+    authenticate(user_id, password)
     with db.engine.connect() as conn:
         item_data = conn.execute(
             sqlalchemy.text('''
@@ -90,7 +92,7 @@ class ItemJson(BaseModel):
     name: str
 
 @router.post("/users/{user_id}/expenses/{expense_id}/items", tags=["items"])
-def create_item(user_id: int, expense_id: int, item_json: ItemJson):
+def create_item(user_id: int, expense_id: int, password: str, item_json: ItemJson):
     """
     This endpoint creates a new item associated with a specific expense for a specific user.
 
@@ -100,6 +102,7 @@ def create_item(user_id: int, expense_id: int, item_json: ItemJson):
     - `cost`: the monetary value of the item, in dollars
     - `name`: the name of the item
     """
+    authenticate(user_id, password)
     with db.engine.begin() as conn:
         expense = conn.execute(
             sqlalchemy.text('''
@@ -128,7 +131,7 @@ def create_item(user_id: int, expense_id: int, item_json: ItemJson):
         "item_id": item.item_id,
         "expense_id": expense_id,
         "cost": item_json.cost,
-        "name": item_json.name,
+        "item_name": item_json.name,
         "user_id": user_id,
     }
 

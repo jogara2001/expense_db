@@ -1,6 +1,7 @@
 import sqlalchemy
 from fastapi import HTTPException
 from src import database as db
+from pydantic import BaseModel
 
 
 def get_user(user_id: int):
@@ -72,3 +73,5 @@ def authenticate(user_id: int, password: str):
         if len(users) != 1:
             raise HTTPException(status_code=401, detail="password incorrect")
 
+class PasswordJson(BaseModel):
+    password: str
