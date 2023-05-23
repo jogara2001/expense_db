@@ -90,7 +90,8 @@ def list_expenses(user_id: int,
                 ON expense.expense_id = item.expense_id
                 WHERE category.user_id = :user_id
                 AND timestamp >= :start_date AND timestamp <= :end_date
-                GROUP BY expense.expense_id, category.category_id, timestamp, description
+                GROUP BY expense.expense_id, category.category_id,
+                timestamp, description
                 LIMIT :limit
                 OFFSET :offset;
                 ''',
