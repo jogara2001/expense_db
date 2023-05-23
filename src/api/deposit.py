@@ -1,9 +1,8 @@
 import datetime
 
 import sqlalchemy
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import DateTime
 
 from src import database as db
 from src.sql_utils import authenticate
