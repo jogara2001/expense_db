@@ -164,7 +164,7 @@ def test_list_expense():
     )
 
     new_expense_one = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "date_time": str(datetime.utcnow()).replace(" ", "T"),
         "category_id": category_response.json()["category_id"],
         "description": "string_1"
     }
@@ -174,7 +174,7 @@ def test_list_expense():
     )
 
     new_expense_two = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "date_time": str(datetime.utcnow()).replace(" ", "T"),
         "category_id": category_response.json()["category_id"],
         "description": "string_2"
     }
@@ -184,7 +184,7 @@ def test_list_expense():
     )
 
     new_expense_three = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+        "date_time": str(datetime.utcnow()).replace(" ", "T"),
         "category_id": category_response.json()["category_id"],
         "description": "string_3"
     }
