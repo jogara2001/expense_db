@@ -99,8 +99,9 @@ def create_user(user: UserJson):
         with conn.begin():
             inserted_user = conn.execute(
                 sqlalchemy.text(
-                    'INSERT INTO "user" (name, hashed_pwd) VALUES '
-                    '(:name, extensions.crypt(:password, extensions.gen_salt(\'bf\'))) RETURNING user_id'
+                'INSERT INTO "user" (name, hashed_pwd) VALUES '
+                '(:name, extensions.crypt(:password, extensions.gen_salt(\'bf\'))) '
+                'RETURNING user_id'
                 ),
                 [{"name": user.name,
                  "password": user.password}]
