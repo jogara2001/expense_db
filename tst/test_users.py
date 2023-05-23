@@ -14,24 +14,25 @@ def test_users():
 
 def test_users_by_id():
     name = str(uuid.uuid4())
+    password = "password"
     data = {
         "name": name,
-        "password": "test"
+        "password": password
     }
 
     postResponse = client.post("/users/", json=data)
     assert postResponse.status_code == 200
     user_id = postResponse.json()["user_id"]
 
-    response = client.get(f"/users/{user_id}/")
+    response = client.get(f"/users/{user_id}/?password={password}")
     assert response.status_code == 200
-    assert response.json() == {"user_id": user_id, "name": name}
+    assert response.json() == {"user_id": user_id, "name": name, "balance": 0}
 
 
 def test_users_by_id2():
-    response = client.get("/users/99999999999/")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "user not found."}
+    response = client.get("/users/99999999999/?password=password")
+    assert response.status_code == 401
+    assert response.json() == {'detail': 'password incorrect'}
 
 
 def test_list_users():

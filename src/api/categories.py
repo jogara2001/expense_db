@@ -44,7 +44,7 @@ def create_category(user_id: int, password: str, category_json: CategoryJson):
             sqlalchemy.text('''
             INSERT INTO category (category_name, user_id)
             VALUES (:category_name, :user_id)
-            RETURNING category_id, name, user_id;
+            RETURNING category_id, category_name, user_id;
             '''),
             {"category_name": category_json.category_name, "user_id": user_id}
         ).fetchone()

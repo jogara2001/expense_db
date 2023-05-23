@@ -3,32 +3,26 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from src import database as db
-from src.sql_utils import username_unique
+from src.sql_utils import username_unique, authenticate
 
 router = APIRouter()
 
 
 @router.get("/users/", tags=["users"])
 def list_users(
-    name: str = "",
-    limit: int = Query(50, ge=1, le=250),
-    offset: int = Query(0, ge=0),
+        name: str = "",
+        limit: int = Query(50, ge=1, le=250),
+        offset: int = Query(0, ge=0),
 ):
     """
-    This endpoint returns the information associated with all users.
-    For each user it returns:
+    This lists the users (primarily used for debugging purposes)
 
-    - `user_id`: the ID of the user
-    - `name`: the name of the user
-
-    You can filter for users whose name contain a string by using the
-    `name` query parameter.
-
-    The `limit` and `offset` query
-    parameters are used for pagination. The `limit` query parameter specifies the
-    maximum number of results to return. The `offset` query parameter specifies the
-    number of results to skip before returning results.
+    - `name`: filter for name of user
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+    - `return`: a list of users
     """
+
     with db.engine.connect() as conn:
         query = 'SELECT user_id, name FROM "user"'
         parameters = {
@@ -56,18 +50,37 @@ def list_users(
 
 
 @router.get("/users/{user_id}/", tags=["users"])
-def get_user(user_id: int):
+def get_user(
+        user_id: int,
+        password: str
+):
     """
     This endpoint returns the information associated with a user by its identifier.
-    For each user it returns:
 
     - `user_id`: the ID of the user
-    - `name`: the name of the user
+    - `password`: the users password
+    - `return`: the specified user
+        - `user_id`: the ID of the user
+        - `name`: the name of the user
+        - `balance`: the total balance of their account
     """
+
+    authenticate(user_id, password)
+
     with db.engine.connect() as conn:
         user = conn.execute(
-            sqlalchemy.text('SELECT user_id, name FROM "user" '
-                            'WHERE user_id = :user_id'),
+            sqlalchemy.text('''
+            select "user".user_id, "user".name, 
+            (COALESCE(sum(deposit.amount), 0.00) - COALESCE(sum(item.cost), 0.00)) 
+            as balance 
+            from "user"
+            left JOIN category ON category.user_id = "user".user_id
+            left JOIN expense ON expense.category_id = category.category_id
+            left JOIN item on item.expense_id = expense.expense_id
+            left JOIN deposit on deposit.user_id = "user".user_id
+            WHERE "user".user_id = :user_id
+            GROUP BY "user".user_id, "user".name
+            '''),
             {"user_id": user_id}
         ).fetchone()
         if user is None:
@@ -75,6 +88,7 @@ def get_user(user_id: int):
     return {
         "user_id": user.user_id,
         "name": user.name,
+        "balance": user.balance
     }
 
 
@@ -88,9 +102,10 @@ def create_user(user: UserJson):
     """
     This endpoint creates a new user.
 
-    Takes in a UserJson which contains the user's name.
-
-    Returns the user's ID and name if successful.
+    - `user`: an object consisting of the following
+        - `name`: the name of the user (must be unique)
+        - `password`: the password for the user
+    - `return`: the resulting user entry
     """
     if not username_unique(user.name):
         raise HTTPException(status_code=404, detail="name already taken")
@@ -98,13 +113,15 @@ def create_user(user: UserJson):
     with db.engine.connect() as conn:
         with conn.begin():
             inserted_user = conn.execute(
-                sqlalchemy.text(
-                'INSERT INTO "user" (name, hashed_pwd) VALUES '
-                '(:name, extensions.crypt(:password, extensions.gen_salt(\'bf\'))) '
-                'RETURNING user_id'
-                ),
-                [{"name": user.name,
-                 "password": user.password}]
+                sqlalchemy.text('''
+                    INSERT INTO "user" (name, hashed_pwd) VALUES
+                    (:name, extensions.crypt(:password, extensions.gen_salt(\'bf\')))
+                    RETURNING user_id
+                '''),
+                {
+                    "name": user.name,
+                    "password": user.password
+                }
             )
             user_id = inserted_user.fetchone().user_id
     return {
