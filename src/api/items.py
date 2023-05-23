@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from fastapi import HTTPException
 
 from src import database as db
-from src.sql_utils import get_category, get_user, authenticate
+from src.sql_utils import authenticate
 
 router = APIRouter()
 

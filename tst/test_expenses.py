@@ -1,5 +1,4 @@
-import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import uuid
 
 from fastapi.testclient import TestClient
@@ -239,7 +238,7 @@ def test_list_expense_wrong_password():
         "category_id": category_response.json()["category_id"],
         "description": "string_2"
     }
-    response_two = client.post(
+    client.post(
         f"/users/{user_id}/expenses/?password={new_user['password']}",
         json=new_expense_two
     )
@@ -249,7 +248,7 @@ def test_list_expense_wrong_password():
         "category_id": category_response.json()["category_id"],
         "description": "string_3"
     }
-    response_three = client.post(
+    client.post(
         f"/users/{user_id}/expenses/?password={new_user['password']}",
         json=new_expense_three
     )
