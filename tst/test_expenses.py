@@ -18,7 +18,7 @@ def test_post_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -47,7 +47,7 @@ def test_post_expense_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -74,7 +74,7 @@ def test_get_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -106,7 +106,8 @@ def test_get_expense():
         "cost": 25,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item
     )
 
@@ -127,7 +128,7 @@ def test_get_expense_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -159,7 +160,7 @@ def test_list_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -219,7 +220,7 @@ def test_list_expense_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
