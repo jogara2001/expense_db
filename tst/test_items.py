@@ -21,13 +21,14 @@ def test_post_item():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
     assert category_response.status_code == 200
     assert category_response.json(
     )["category_name"] == new_category["category_name"]
+    assert category_response.json()["user_id"] == user_id
 
     new_expense = {
         "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
@@ -48,7 +49,8 @@ def test_post_item():
         "cost": 25,
     }
     item_response = client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item
     )
 
@@ -70,7 +72,7 @@ def test_post_item_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -117,7 +119,7 @@ def test_get_item():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -154,7 +156,8 @@ def test_get_item():
     item_id = item_response.json()["item_id"]
 
     item_get_response = client.get(
-        f"/users/{user_id}/expenses/{expense_id}/items/{item_id}?password={new_user['password']}"
+        f"/users/{user_id}/expenses/{expense_id}/items/{item_id}"
+        f"?password={new_user['password']}"
     )
 
     assert item_get_response.status_code == 200
@@ -179,7 +182,7 @@ def test_get_item_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -206,7 +209,8 @@ def test_get_item_wrong_password():
         "cost": 25,
     }
     item_response = client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item
     )
 
@@ -232,7 +236,7 @@ def test_list_item():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -252,7 +256,8 @@ def test_list_item():
         "cost": 5,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item_one
     )
     new_item_two = {
@@ -260,7 +265,8 @@ def test_list_item():
         "cost": 10,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items?"
+        f"password={new_user['password']}",
         json=new_item_two
     )
     new_item_three = {
@@ -268,7 +274,8 @@ def test_list_item():
         "cost": 15,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item_three
     )
 
@@ -294,7 +301,7 @@ def test_list_item_wrong_password():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/?password={new_user['password']}",
         json=new_category
     )
 
@@ -314,7 +321,8 @@ def test_list_item_wrong_password():
         "cost": 5,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item_one
     )
     new_item_two = {
@@ -322,7 +330,8 @@ def test_list_item_wrong_password():
         "cost": 10,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item_two
     )
     new_item_three = {
@@ -330,7 +339,8 @@ def test_list_item_wrong_password():
         "cost": 15,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items"
+        f"?password={new_user['password']}",
         json=new_item_three
     )
 
