@@ -7,13 +7,12 @@ from fastapi import HTTPException
 
 from src import database as db
 from src import sql_utils as utils
-from src.sql_utils import get_category
 
 router = APIRouter()
 
 
 @router.get("/users/{user_id}/expenses/{expense_id}", tags=["expenses"])
-def get_expense(user_id: int, expense_id: int, password: str):
+def get_expense(user_id: int, expense_id: int):
     """
     This endpoint returns the information associated with an expense by its identifier.
     For each expense it returns:
@@ -24,7 +23,6 @@ def get_expense(user_id: int, expense_id: int, password: str):
     - `category`: the user defined category of the item
     - `description`: the user defined description of the item
     """
-    utils.authenticate(user_id, password)
     with db.engine.connect() as conn:
         expense_data = conn.execute(
             sqlalchemy.text('''
@@ -53,14 +51,14 @@ def get_expense(user_id: int, expense_id: int, password: str):
 
 
 @router.get("/users/{user_id}/expenses", tags=["expenses"])
-def list_expenses(user_id: int,
-                  password: str,
-                  limit: int = 10,
-                  offset: int = 0,
-                  start_date: datetime.date =
-                  datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
-                  end_date: datetime.date = datetime.datetime.utcnow().date(),
-                  ):
+def list_expenses(
+        user_id: int,
+        limit: int = 10,
+        offset: int = 0,
+        start_date: datetime.date =
+        datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
+        end_date: datetime.date = datetime.datetime.utcnow().date(),
+):
     """
     This endpoint returns the information associated with expenses
     over a defined time period.
@@ -75,7 +73,6 @@ def list_expenses(user_id: int,
     - `expense_id`: the ID of the item associated with the expense
     - `category`: the user-defined category of the item
     """
-    utils.authenticate(user_id, password)
     with db.engine.begin() as conn:
         expenses = conn.execute(
             sqlalchemy.text(
@@ -123,7 +120,7 @@ class ExpenseJson(BaseModel):
 
 
 @router.post("/users/{user_id}/expenses/", tags=["expenses"])
-def add_expense(user_id: int, password: str, expense_json: ExpenseJson):
+def add_expense(user_id: int, expense_json: ExpenseJson):
     """
     This endpoint adds a new expense to the database.
     This expense includes:
@@ -134,8 +131,7 @@ def add_expense(user_id: int, password: str, expense_json: ExpenseJson):
     - `category_id`: the budget category of the item (required)
     - `description`: the user defined description of the item (not required)
     """
-    utils.authenticate(user_id, password)
-    get_category(user_id, expense_json.category_id)
+    utils.get_category(user_id, expense_json.category_id)
     with db.engine.begin() as conn:
         inserted_expense = conn.execute(
             sqlalchemy.text(

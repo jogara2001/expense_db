@@ -1,7 +1,6 @@
 import sqlalchemy
 from fastapi import HTTPException
 from src import database as db
-from pydantic import BaseModel
 
 
 def get_user(user_id: int):
@@ -55,23 +54,3 @@ def username_unique(name: str):
             }
         ).fetchall()
         return len(users) == 0
-
-
-def authenticate(user_id: int, password: str):
-    with db.engine.connect() as conn:
-        users = conn.execute(
-            sqlalchemy.text('''
-            SELECT user_id from "user"
-            WHERE user_id = :user_id
-            AND hashed_pwd = extensions.crypt(:password, hashed_pwd)
-            '''),
-            {
-                "user_id": user_id,
-                "password": password
-            }
-        ).fetchall()
-        if len(users) != 1:
-            raise HTTPException(status_code=401, detail="password incorrect")
-
-class PasswordJson(BaseModel):
-    password: str

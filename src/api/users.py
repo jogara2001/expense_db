@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from src import database as db
-from src.sql_utils import username_unique, authenticate
+from src.sql_utils import username_unique
 
 router = APIRouter()
 
@@ -52,20 +52,16 @@ def list_users(
 @router.get("/users/{user_id}/", tags=["users"])
 def get_user(
         user_id: int,
-        password: str
 ):
     """
     This endpoint returns the information associated with a user by its identifier.
 
     - `user_id`: the ID of the user
-    - `password`: the users password
     - `return`: the specified user
         - `user_id`: the ID of the user
         - `name`: the name of the user
         - `balance`: the total balance of their account
     """
-
-    authenticate(user_id, password)
 
     with db.engine.connect() as conn:
         user = conn.execute(
@@ -139,4 +135,29 @@ def create_user(user: UserJson):
     return {
         "user_id": user_id,
         "name": user.name,
+    }
+
+
+@router.post("/users/login", tags=["users"])
+def login_user(username: str, password: str):
+    with db.engine.connect() as conn:
+        users = conn.execute(
+            sqlalchemy.text('''
+            SELECT user_id from "user"
+            WHERE name = :user_name
+            AND hashed_pwd = extensions.crypt(:password, hashed_pwd)
+            '''),
+            {
+                "user_name": username,
+                "password": password
+            }
+        ).fetchall()
+        if len(users) != 1:
+            raise HTTPException(
+                status_code=401,
+                detail="username or password incorrect"
+            )
+
+    return {
+        "message": "Signed in"
     }
