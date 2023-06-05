@@ -153,7 +153,10 @@ def login_user(username: str, password: str):
             }
         ).fetchall()
         if len(users) != 1:
-            raise HTTPException(status_code=401, detail="username or password incorrect")
+            raise HTTPException(
+                status_code=401,
+                detail="username or password incorrect"
+            )
 
     return {
         "message": "Signed in"

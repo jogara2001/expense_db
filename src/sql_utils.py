@@ -1,7 +1,6 @@
 import sqlalchemy
 from fastapi import HTTPException
 from src import database as db
-from pydantic import BaseModel
 
 
 def get_user(user_id: int):
