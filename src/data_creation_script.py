@@ -1,11 +1,21 @@
 import datetime
 
+import sqlalchemy
+
 from src import database as db
+
+metadata_obj = sqlalchemy.MetaData()
+user = sqlalchemy.Table("user", metadata_obj, autoload_with=db.engine)
+deposit = sqlalchemy.Table("deposit", metadata_obj, autoload_with=db.engine)
+expense = sqlalchemy.Table("expense", metadata_obj, autoload_with=db.engine)
+category = sqlalchemy.Table("category", metadata_obj, autoload_with=db.engine)
+budget = sqlalchemy.Table("budget", metadata_obj, autoload_with=db.engine)
+item = sqlalchemy.Table("item", metadata_obj, autoload_with=db.engine)
 
 
 def generate_data(num: int):
     with db.engine.connect() as conn:
-        user_obj = db.user.insert()
+        user_obj = user.insert()
         conn.execute(
             user_obj,
             [{
@@ -16,7 +26,7 @@ def generate_data(num: int):
         )
         print("finished users")
 
-        deposit_obj = db.deposit.insert()
+        deposit_obj = deposit.insert()
         conn.execute(
             deposit_obj,
             [{
@@ -28,7 +38,7 @@ def generate_data(num: int):
         )
         print("finished deposits")
 
-        category_obj = db.category.insert()
+        category_obj = category.insert()
         conn.execute(
             category_obj,
             [{
@@ -39,7 +49,7 @@ def generate_data(num: int):
         )
         print("finished categories")
 
-        budget_obj = db.budget.insert()
+        budget_obj = budget.insert()
         conn.execute(
             budget_obj,
             [{
@@ -52,7 +62,7 @@ def generate_data(num: int):
         )
         print("finished budgets")
 
-        expense_obj = db.expense.insert()
+        expense_obj = expense.insert()
         conn.execute(
             expense_obj,
             [{
@@ -64,7 +74,7 @@ def generate_data(num: int):
         )
         print("finished expenses")
 
-        item_obj = db.item.insert()
+        item_obj = item.insert()
         conn.execute(
             item_obj,
             [{
