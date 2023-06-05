@@ -7,3 +7,4 @@ python-dotenv~=1.0.0
 pre-commit
 pydantic~=1.10.7
 alembic~=1.11.1
+Faker~=18.10.1
