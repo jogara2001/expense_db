@@ -1,26 +1,38 @@
 import datetime
-
+import os
+from faker import Faker
+import dotenv
 import sqlalchemy
 
-from src import database as db
+
+dotenv.load_dotenv()
+DB_USER: str = os.environ.get("POSTGRES_USER")
+DB_PASSWD = os.environ.get("POSTGRES_PASSWORD")
+DB_SERVER: str = os.environ.get("POSTGRES_SERVER")
+DB_PORT: str = os.environ.get("POSTGRES_PORT")
+DB_NAME: str = os.environ.get("POSTGRES_DB")
+
+# Create a new DB engine based on our connection string
+engine = sqlalchemy.create_engine(f"postgresql://{DB_USER}:{DB_PASSWD}@{DB_SERVER}:{DB_PORT}/{DB_NAME}")
 
 metadata_obj = sqlalchemy.MetaData()
-user = sqlalchemy.Table("user", metadata_obj, autoload_with=db.engine)
-deposit = sqlalchemy.Table("deposit", metadata_obj, autoload_with=db.engine)
-expense = sqlalchemy.Table("expense", metadata_obj, autoload_with=db.engine)
-category = sqlalchemy.Table("category", metadata_obj, autoload_with=db.engine)
-budget = sqlalchemy.Table("budget", metadata_obj, autoload_with=db.engine)
-item = sqlalchemy.Table("item", metadata_obj, autoload_with=db.engine)
+user = sqlalchemy.Table("user", metadata_obj, autoload_with=engine)
+deposit = sqlalchemy.Table("deposit", metadata_obj, autoload_with=engine)
+expense = sqlalchemy.Table("expense", metadata_obj, autoload_with=engine)
+category = sqlalchemy.Table("category", metadata_obj, autoload_with=engine)
+budget = sqlalchemy.Table("budget", metadata_obj, autoload_with=engine)
+item = sqlalchemy.Table("item", metadata_obj, autoload_with=engine)
 
 
 def generate_data(num: int):
-    with db.engine.connect() as conn:
+    fake = Faker()
+    with engine.connect() as conn:
         user_obj = user.insert()
         conn.execute(
             user_obj,
             [{
                 "user_id": i,
-                "name": f"user{i}",
+                "name": fake.unique.email(),
                 "hashed_pwd": "password"
             } for i in range(num)]
         )
@@ -44,7 +56,7 @@ def generate_data(num: int):
             [{
                 "category_id": i,
                 "user_id": i,
-                "category_name": "category",
+                "category_name": fake.sentence(),
             } for i in range(num)]
         )
         print("finished categories")
@@ -69,7 +81,7 @@ def generate_data(num: int):
                 "expense_id": i,
                 "category_id": i,
                 "timestamp": datetime.datetime.utcnow(),
-                "description": "test data"
+                "description": fake.sentence()
             } for i in range(num)]
         )
         print("finished expenses")
@@ -81,7 +93,7 @@ def generate_data(num: int):
                 "item_id": i,
                 "expense_id": i,
                 "cost": 10,
-                "name": "test data"
+                "name": fake.sentence()
             } for i in range(num)]
         )
         print("finished items")
@@ -89,4 +101,4 @@ def generate_data(num: int):
 
 
 if __name__ == "__main__":
-    generate_data(1000000)
+    generate_data(100)
