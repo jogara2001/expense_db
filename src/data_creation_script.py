@@ -1,8 +1,6 @@
 import datetime
 
 from src import database as db
-import sqlalchemy
-from sqlalchemy.orm import Session
 
 
 def generate_data(num: int):
