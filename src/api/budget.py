@@ -4,7 +4,6 @@ from pydantic import BaseModel
 import datetime
 
 from src import database as db
-from src.sql_utils import authenticate
 
 router = APIRouter()
 
@@ -18,9 +17,7 @@ class BudgetJson(BaseModel):
 
 @router.post("/users/{user_id}/categories/{category_id}/budget/", tags=["budgets"])
 def add_budget(
-    user_id: int,
     category_id: int,
-    password: str,
     budget_entry: BudgetJson
 ):
     """
@@ -30,7 +27,6 @@ def add_budget(
     - `budget_category`: the user generated category to be created/updated
     - `budget`: the dollar amount of the budget
     """
-    authenticate(user_id, password)
     with db.engine.begin() as conn:
         budget = conn.execute(sqlalchemy.text('''
             INSERT INTO budget (category_id, start_date, end_date, budget)
@@ -55,11 +51,10 @@ def add_budget(
     "/users/{user_id}/categories/{category_id}/budget/{budget_id}/",
     tags=["budgets"]
 )
-def get_budget(user_id: int, category_id: int, password: str, budget_id: int):
+def get_budget(user_id: int, category_id: int, budget_id: int):
     """
     This endpoint returns a budget entry for a given budget_id
     """
-    authenticate(user_id, password)
     with db.engine.connect() as conn:
         # Check for category id as well
         budget = conn.execute(sqlalchemy.text(
@@ -93,7 +88,7 @@ def get_budget(user_id: int, category_id: int, password: str, budget_id: int):
     "/users/{user_id}/categories/{category_id}/budget/",
     tags=["budgets"]
 )
-def list_budget(user_id: int, password: str, limit: int = 10, offset: int = 0):
+def list_budget(user_id: int, limit: int = 10, offset: int = 0):
     """
     This endpoint returns all the budget information associated with a user
     For each budget, the following is returned:
@@ -104,7 +99,6 @@ def list_budget(user_id: int, password: str, limit: int = 10, offset: int = 0):
     `amount`: the amount allocated for the budget
     """
     data = []
-    authenticate(user_id, password)
     with db.engine.connect() as conn:
         budgets = conn.execute(sqlalchemy.text(
             '''

@@ -5,7 +5,6 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from src import database as db
-from src.sql_utils import authenticate
 
 router = APIRouter()
 
@@ -13,7 +12,6 @@ router = APIRouter()
 @router.get("/user/{user_id}/deposits/", tags=["deposits"])
 def list_deposits(
         user_id: int,
-        password: str,
         start_date: datetime.date =
         datetime.datetime.utcnow().date() - datetime.timedelta(days=7),
         end_date: datetime.date = datetime.datetime.utcnow().date(),
@@ -36,7 +34,6 @@ def list_deposits(
     - `amount`: the amount of the deposit
     - `timestamp`: the timestamp of the deposit
     """
-    authenticate(user_id, password)
 
     with db.engine.connect() as conn:
         deposits = conn.execute(
@@ -73,20 +70,17 @@ class DepositJson(BaseModel):
 @router.post("/user/{user_id}/deposits/", tags=["deposits"])
 def add_deposit(
         user_id: int,
-        password: str,
         deposit: DepositJson,
 ):
     """
     This endpoint adds a deposit to the user specified
 
     - `user_id`: the user to add the deposit to
-    - `password`: the password for the user
     - `deposit`: an object consisting of the following
         - `amount`: the amount of the deposit
         - `timestamp`: the timestamp of the deposit
     return`: the resulting deposit entry
     """
-    authenticate(user_id, password)
 
     with db.engine.connect() as conn:
         with conn.begin():
