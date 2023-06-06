@@ -21,11 +21,14 @@ def add_budget(
     budget_entry: BudgetJson
 ):
     """
-    This endpoint adds or updates a category with a budget. It takes as input:
+    This endpoint adds a budget to a category. It takes as input:
 
     - `user_id`: the associated user for the budget
-    - `budget_category`: the user generated category to be created/updated
-    - `budget`: the dollar amount of the budget
+    - `category_id`: the category to associate with the budget
+    - `budget_entry`: an object consisting of the following
+        - `budget`: the dollar amount of the budget
+        - `start_date`: The start date for the budget
+        - `end_date`: The end date for the budget
     """
     with db.engine.begin() as conn:
         budget = conn.execute(sqlalchemy.text('''
@@ -53,7 +56,11 @@ def add_budget(
 )
 def get_budget(user_id: int, category_id: int, budget_id: int):
     """
-    This endpoint returns a budget entry for a given budget_id
+    This endpoint returns a budget entry for a given budget_id. It takes as input:
+
+    - `user_id`: the associated user for the budget
+    - `category_id`: the associated category for the budget
+    - `budget_id`: the budget_id
     """
     with db.engine.connect() as conn:
         # Check for category id as well
@@ -92,11 +99,12 @@ def list_budget(user_id: int, limit: int = 10, offset: int = 0):
     """
     This endpoint returns all the budget information associated with a user
     For each budget, the following is returned:
-    `budget_id`: the id of the budget
-    `category_name`: the category the budget is associated with
-    `start_date`: the designated start date of the budget
-    `end_date`: the designated end date of the budget
-    `amount`: the amount allocated for the budget
+
+    - `budget_id`: the id of the budget
+    - `category_name`: the category the budget is associated with
+    - `start_date`: the designated start date of the budget
+    - `end_date`: the designated end date of the budget
+    - `amount`: the amount allocated for the budget
     """
     data = []
     with db.engine.connect() as conn:

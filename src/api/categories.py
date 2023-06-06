@@ -16,8 +16,8 @@ def create_category(user_id: int, category_json: CategoryJson):
     This endpoint creates a new category for a specific user.
 
     - `user_id`: the id of the user
-    - `category_id`: the id of the category
-    - `category_name`: the name of the category
+    - `category_json`: object consisting of the following
+        - `category_name`: the name of the category to create
     """
     with db.engine.begin() as conn:
         category_data = conn.execute(
@@ -41,9 +41,14 @@ def list_categories(
     limit: int = 10,
     offset: int = 0,
 ):
-    '''
+    """
     This endpoint provides the list of categories associated with a user
-    '''
+
+    - `user_id`: the id of the associated user
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+
+    """
     with db.engine.connect() as conn:
         categories = conn.execute(sqlalchemy.text(
             '''
@@ -68,9 +73,12 @@ def get_category(
     user_id: int,
     category_id: int,
 ):
-    '''
+    """
     This endpoint returns the details of a specific category
-    '''
+
+    - `user_id`: the id of the user associated with the category
+    - `category_id`: the id of the category to get
+    """
     with db.engine.connect() as conn:
         category = conn.execute(sqlalchemy.text(
             '''
@@ -91,10 +99,12 @@ def get_category(
 
 @router.get("/users/{user_id}/category/budgets", tags=["category"])
 def category_budget_percentage(user_id: int):
-    '''
+    """
     This endpoint returns the percentage of a user's overall allocated budget
-    on a per-category basis. Categories are ranked overall from 
-    '''
+    on a per-category basis. Categories are ranked overall by percentage descending
+
+    - `user_id`: the associated user
+    """
     with db.engine.begin() as conn:
         budgets = conn.execute(sqlalchemy.text(
             '''
