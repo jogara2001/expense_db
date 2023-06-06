@@ -140,6 +140,12 @@ def create_user(user: UserJson):
 
 @router.post("/users/login", tags=["users"])
 def login_user(username: str, password: str):
+    """
+    Used to login users
+
+    - `username`: the username to log in with
+    - `password`: the password to log in with
+    """
     with db.engine.connect() as conn:
         users = conn.execute(
             sqlalchemy.text('''
