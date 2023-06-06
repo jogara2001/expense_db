@@ -4,7 +4,6 @@ from pydantic import BaseModel
 import datetime
 
 from src import database as db
-from src.sql_utils import authenticate
 
 router = APIRouter()
 
@@ -18,19 +17,19 @@ class BudgetJson(BaseModel):
 
 @router.post("/users/{user_id}/categories/{category_id}/budget/", tags=["budgets"])
 def add_budget(
-    user_id: int,
     category_id: int,
-    password: str,
     budget_entry: BudgetJson
 ):
     """
-    This endpoint adds or updates a category with a budget. It takes as input:
+    This endpoint adds a budget to a category. It takes as input:
 
     - `user_id`: the associated user for the budget
-    - `budget_category`: the user generated category to be created/updated
-    - `budget`: the dollar amount of the budget
+    - `category_id`: the category to associate with the budget
+    - `budget_entry`: an object consisting of the following
+        - `budget`: the dollar amount of the budget
+        - `start_date`: The start date for the budget
+        - `end_date`: The end date for the budget
     """
-    authenticate(user_id, password)
     with db.engine.begin() as conn:
         budget = conn.execute(sqlalchemy.text('''
             INSERT INTO budget (category_id, start_date, end_date, budget)
@@ -55,11 +54,14 @@ def add_budget(
     "/users/{user_id}/categories/{category_id}/budget/{budget_id}/",
     tags=["budgets"]
 )
-def get_budget(user_id: int, category_id: int, password: str, budget_id: int):
+def get_budget(user_id: int, category_id: int, budget_id: int):
     """
-    This endpoint returns a budget entry for a given budget_id
+    This endpoint returns a budget entry for a given budget_id. It takes as input:
+
+    - `user_id`: the associated user for the budget
+    - `category_id`: the associated category for the budget
+    - `budget_id`: the budget_id
     """
-    authenticate(user_id, password)
     with db.engine.connect() as conn:
         # Check for category id as well
         budget = conn.execute(sqlalchemy.text(
@@ -93,18 +95,18 @@ def get_budget(user_id: int, category_id: int, password: str, budget_id: int):
     "/users/{user_id}/categories/{category_id}/budget/",
     tags=["budgets"]
 )
-def list_budget(user_id: int, password: str, limit: int = 10, offset: int = 0):
+def list_budget(user_id: int, limit: int = 10, offset: int = 0):
     """
     This endpoint returns all the budget information associated with a user
     For each budget, the following is returned:
-    `budget_id`: the id of the budget
-    `category_name`: the category the budget is associated with
-    `start_date`: the designated start date of the budget
-    `end_date`: the designated end date of the budget
-    `amount`: the amount allocated for the budget
+
+    - `budget_id`: the id of the budget
+    - `category_name`: the category the budget is associated with
+    - `start_date`: the designated start date of the budget
+    - `end_date`: the designated end date of the budget
+    - `amount`: the amount allocated for the budget
     """
     data = []
-    authenticate(user_id, password)
     with db.engine.connect() as conn:
         budgets = conn.execute(sqlalchemy.text(
             '''

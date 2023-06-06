@@ -27,12 +27,12 @@ def test_list_deposit():
     }
 
     postResponse = client.post(
-        f"/user/{user_id}/deposits/?password={password}", json=data2)
+        f"/user/{user_id}/deposits/", json=data2)
     assert postResponse.status_code == 200
 
     response = client.get(
-        f"/user/{user_id}/deposits/?password={password}"
-        f"&limit=1&offset=0")
+        f"/user/{user_id}/deposits/"
+        f"?limit=1&offset=0")
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -53,8 +53,8 @@ def test_list_deposit2():
     user_id = postResponse.json()["user_id"]
 
     response = client.get(
-        f"/user/{user_id}/deposits/?password={password}"
-        f"&limit=1&offset=0")
+        f"/user/{user_id}/deposits/"
+        f"?limit=1&offset=0")
     assert response.status_code == 200
     assert len(response.json()) == 0
 
@@ -78,7 +78,7 @@ def test_post_deposit():
     }
 
     postResponse = client.post(
-        f"/user/{user_id}/deposits/?password={password}", json=data2)
+        f"/user/{user_id}/deposits/", json=data2)
     assert postResponse.status_code == 200
     assert postResponse.json()["user_id"] == user_id
     assert postResponse.json()["amount"] == 100
