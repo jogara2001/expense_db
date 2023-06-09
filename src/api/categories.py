@@ -30,7 +30,7 @@ def create_category(user_id: int, category_json: CategoryJson):
         ).fetchone()
     return {
         "category_id": category_data.category_id,
-        "category_name": category_data.name,
+        "category_name": category_data.category_name,
         "user_id": category_data.user_id,
     }
 
@@ -108,20 +108,17 @@ def category_budget_percentage(user_id: int):
     with db.engine.begin() as conn:
         budgets = conn.execute(sqlalchemy.text(
             '''
-            SELECT c.category_name, b.budget_amount, 
-            (b.budget_amount / total_budget.total_budget) * 100 AS budget_percentage
-            FROM category AS c
-            JOIN budget AS b ON b.category_id = c.category_id
-            JOIN (SELECT SUM(budget_amount) AS total_budget FROM budget) 
-            AS total_budget
+            SELECT COALESCE(SUM(budget),0.0) sums, category_name FROM category as c
+            LEFT JOIN budget AS b ON b.category_id = c.category_id
             WHERE c.user_id = :user_id
-            ORDER BY budget_percentage DESC;
+            GROUP BY category_name
             '''
         ), {'user_id': user_id}).fetchall()
+    net_sum = sum([c_sum.sums for c_sum in budgets])
     return [
         {
             "category_name": budget.category_name,
-            "budget_amount": budget.budget_amount,
-            "budget_percentage": budget.budget_percentage,
+            "budget_amount": budget.sums,
+            "budget_percentage": str(round(budget.sums/net_sum * 100,2))+"%",
         } for budget in budgets
     ]
