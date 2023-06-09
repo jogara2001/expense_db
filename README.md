@@ -1,91 +1,123 @@
-# expense_db
-Expense database for CSC-365
+<h1 align="center">
+  <a href="https://github.com/jogara2001/expense_db">
+    <!-- Please provide path to your logo here -->
+    <img src="docs/images/logo.svg" alt="Logo" width="100" height="100">
+  </a>
+</h1>
 
-Description:
-This project will be a backend api for an expense tracker. It should allow users to manage 
-their expenses and track their progress. Some of the data tracked will include transaction
-data such as price, time/date, item, and category. Other data could include user information
-such as spending limits, income, goals, etc. With all this data, a relational database 
-seems justified as it will allow us to manage many different scopes of data. 
+<div align="center">
+  Expense Database
+  <br />
+  <a href="#about"><strong>Explore the screenshots »</strong></a>
+  <br />
+  <br />
+  <a href="https://github.com/jogara2001/expense_db/issues/new?assignees=&labels=bug&template=01_BUG_REPORT.md&title=bug%3A+">Report a Bug</a>
+  ·
+  <a href="https://github.com/jogara2001/expense_db/issues/new?assignees=&labels=enhancement&template=02_FEATURE_REQUEST.md&title=feat%3A+">Request a Feature</a>
+  .
+  <a href="https://github.com/jogara2001/expense_db/issues/new?assignees=&labels=question&template=04_SUPPORT_QUESTION.md&title=support%3A+">Ask a Question</a>
+</div>
 
-contributers: jogara@calpoly.edu zlnavarr@calpoly.edu rnair02@calpoly.edu
+<div align="center">
+<br />
+
+[![Project license](https://img.shields.io/github/license/jogara2001/expense_db.svg?style=flat-square)](LICENSE)
+
+[![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/jogara2001/expense_db/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+[![code with love by jogara2001](https://img.shields.io/badge/%3C%2F%3E%20with%20%E2%99%A5%20by-jogara2001-ff1414.svg?style=flat-square)](https://github.com/jogara2001)
+
+</div>
+
+<details open="open">
+<summary>Table of Contents</summary>
+
+- [About](#about)
+  - [Built With](#built-with)
+- [Usage](#usage)
+- [Roadmap](#roadmap)
+- [Support](#support)
+- [Project assistance](#project-assistance)
+- [Contributing](#contributing)
+- [Authors & contributors](#authors--contributors)
+- [Security](#security)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
+</details>
+
+---
+
+## About
+
+This project is a backend api for an expense tracker. It allows users to manage 
+their expenses and track their progress. Some of the data tracked includes transaction
+data such as price, time/date, item, and category. Other data includes user information
+such as deposits, budgets, and balance. All these data is managed by a relational database.
+
+This project was undertaken as part of CSC-365 at Cal Poly
 
 
-## User Stories:
+### Built With
+- FastAPI
+- SqlAlchemy
+- Vercel
+- Supabase
 
-- As a customer, I want to be able to add an expense to the database, so that I can access it later
-- As a customer, I want to be able to get a past expense and associated data, so that I can read detailed information for each expense
-- As a customer, I want to be able to get all the expenses over a given date range or category, so that I can track my spending habits on a macro level
-- As a customer, I want to be able to set a budget over a week, so that I can set spending goals
-- As a customer, I want to be able to compare my spending to my budget, so that I can track my progress towards my goals
+## Usage
 
-## Endpoints:
+See https://expense-db.vercel.app/docs for usage along with full API
 
-### Get expense
-`GET: /user/{user_id}/expense/{expense_id}`
+## Roadmap
 
-This endpoint returns the information associated with an expense by its identifier. For each expense it returns:
+See the [open issues](https://github.com/jogara2001/expense_db/issues) for a list of proposed features (and known issues).
 
-- `cost`: the monetary value of the expense, in Dollars
-- `date`: the date of the expense
-- `expense_id`: the ID of the item associated with the expense
-- `category`: the user defined category of the item
-- `description`: the user defined description of the item
+- [Top Feature Requests](https://github.com/jogara2001/expense_db/issues?q=label%3Aenhancement+is%3Aopen+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
+- [Top Bugs](https://github.com/jogara2001/expense_db/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
+- [Newest Bugs](https://github.com/jogara2001/expense_db/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
 
-### Get expenses over time
-`GET: /user/{user_id}/expenses/`
+## Support
 
-This endpoint returns the information associated with expenses over a defined time period. By default, the difference between `start_time` and `end_time` is one week and `end_time` is today. For each expense, it returns:
+Reach out to the maintainer at one of the following places:
 
-- `cost`: the monetary value of the expense, in dollars
-- `date`: the date of the expense
-- `expense_id`: the ID of the item associated with the expense
-- `category`: the user-defined category of the item
-- `budget_delta`: a number showing the difference between current money spent in the category and the budget in place
+- [GitHub issues](https://github.com/jogara2001/expense_db/issues/new?assignees=&labels=question&template=04_SUPPORT_QUESTION.md&title=support%3A+)
+- Contact options listed on [this GitHub profile](https://github.com/jogara2001)
 
-### Get Budget
-`GET: /user/{user_id}/budget/{category_id}`
+## Project assistance
 
-This endpoint returns the user's budget information. By default, it will return all the user's budget information for all categories.
+If you want to say **thank you** or/and support active development of Expense Database:
 
-- `category`: the user-defined name of a specific category
-- `budget`: the budget associated with the category
-- `expenses`: the expenses associated with each category
-- `budget_delta`: a number showing the difference between current money spent in the category and the budget in place
+- Add a [GitHub Star](https://github.com/jogara2001/expense_db) to the project.
+- Tweet about the Expense Database.
+- Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or your personal blog.
 
-Each expense is represented by a dictionary with the following keys:
+Together, we can make Expense Database **better**!
 
-- `cost`: the monetary value of the expense, in dollars
-- `item`: the item associated with the expense
-- `date`: the date of the expense
+## Contributing
 
-### Set Budget
-`POST: /user/{user_id}/budget/{category}/`
+First off, thanks for taking the time to contribute! Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make will benefit everybody else and are **greatly appreciated**.
 
-This endpoint adds or updates a category with a budget. It takes as input:
 
-- `user`: the associated user for the budget
-- `category`: the user generated category to be created/updated
-- `budget`: the dollar amount of the budget
+Please read [our contribution guidelines](docs/CONTRIBUTING.md), and thank you for being involved!
 
-### Add Expense
-`POST: /user/{user_id}/expense/`
+## Authors & contributors
 
-This endpoint adds a new expense to the database. This expense includes some required data and some optional data:
+The original setup of this repository is by [Joe O'Gara](https://github.com/jogara2001).
 
-- `user`: the user who is adding the expense (required)
-- `cost`: the monetary value of the expense, in Dollars (required)
-- `date`: the date of the expense (required)
-- `category`: the user defined category of the item (not required)
-- `description`: the user defined description of the item (not required)
+For a full list of all authors and contributors, see [the contributors page](https://github.com/jogara2001/expense_db/contributors).
 
-## Edge Cases and Transaction Flow:
+## Security
 
-- Users should be required to include minimum data
-  - If users don’t include required fields in an API called an error message should be returned
-- Users should not be able to view or edit another user's information straight from an API call
-  - If this is attempted an error message should be returned
-- If a user attempts to create a category that already exists, it should instead update the existing category, rather than create duplicates
+Expense Database follows good practices of security, but 100% security cannot be assured.
+Expense Database is provided **"as is"** without any **warranty**. Use at your own risk.
 
-## ER Diagram
-![ER_DIAGRAM](./ER_Diagram.jpeg)
+_For more information and to report security issues, please refer to our [security documentation](docs/SECURITY.md)._
+
+## License
+
+This project is licensed under the **MIT license**.
+
+See [LICENSE](LICENSE) for more information.
+
+## Acknowledgements
+
+California Polytechnic State University

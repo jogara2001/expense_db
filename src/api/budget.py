@@ -1,154 +1,129 @@
 import sqlalchemy
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import datetime
 
 from src import database as db
-from src.sql_utils import get_category, get_user
 
 router = APIRouter()
 
 
-@router.get("/users/{user_id}/budget/", tags=["budgets"])
-def get_budget(user_id: int, budget_category_id: int = None):
+class BudgetJson(BaseModel):
+    budget: float
+    start_date: datetime.date = datetime.datetime.utcnow().date()
+    end_date: datetime.date = datetime.datetime.utcnow().date() + \
+        datetime.timedelta(days=7)
+
+
+@router.post("/users/{user_id}/categories/{category_id}/budget/", tags=["budgets"])
+def add_budget(
+    category_id: int,
+    budget_entry: BudgetJson
+):
     """
-    This endpoint returns the user's budget information.
-    By default, it will return all the user's budget information for all categories.
+    This endpoint adds a budget to a category. It takes as input:
 
-    - `budget_category_id`: the id of the category
-    - `budget_category`: the user-defined name of a specific category
-    - `budget`: the budget associated with the category
-    - `expenses`: the expenses associated with each category
-    - `budget_delta`: a number showing the difference between
-      current money spent in the category and the budget in place
+    - `user_id`: the associated user for the budget
+    - `category_id`: the category to associate with the budget
+    - `budget_entry`: an object consisting of the following
+        - `budget`: the dollar amount of the budget
+        - `start_date`: The start date for the budget
+        - `end_date`: The end date for the budget
+    """
+    with db.engine.begin() as conn:
+        budget = conn.execute(sqlalchemy.text('''
+            INSERT INTO budget (category_id, start_date, end_date, budget)
+            VALUES (:category_id, :start, :end, :amount)
+            RETURNING budget_id, category_id, start_date, end_date, budget
+        '''), {
+            "category_id": category_id,
+            "start": budget_entry.start_date,
+            "end": budget_entry.end_date,
+            "amount": budget_entry.budget
+        }).fetchone()
+    return {
+        "budget_id": budget.budget_id,
+        "category_id": budget.category_id,
+        "start_date": budget.start_date,
+        "end_date": budget.end_date,
+        "budget": budget.budget
+    }
 
-    Each expense is represented by a dictionary with the following keys:
 
-    - `cost`: the monetary value of the expense, in dollars
-    - `item`: the item associated with the expense
-    - `date_time`: the date of the expense
+@router.get(
+    "/users/{user_id}/categories/{category_id}/budget/{budget_id}/",
+    tags=["budgets"]
+)
+def get_budget(user_id: int, category_id: int, budget_id: int):
+    """
+    This endpoint returns a budget entry for a given budget_id. It takes as input:
+
+    - `user_id`: the associated user for the budget
+    - `category_id`: the associated category for the budget
+    - `budget_id`: the budget_id
+    """
+    with db.engine.connect() as conn:
+        # Check for category id as well
+        budget = conn.execute(sqlalchemy.text(
+            '''
+            SELECT budget_id, budget.category_id,
+            start_date, end_date, budget
+            FROM budget
+            JOIN category ON budget.category_id = category.category_id
+            JOIN "user" ON category.user_id = "user".user_id
+            WHERE budget_id = :budget_id
+            AND "user".user_id = :user_id
+            AND budget.category_id = :category_id;
+            '''
+        ), {
+            "budget_id": budget_id,
+            "user_id": user_id,
+            "category_id": category_id
+        }).fetchone()
+        if budget is None:
+            raise HTTPException(status_code=404, detail="budget not found.")
+    return {
+        "budget_id": budget.budget_id,
+        "category_id": budget.category_id,
+        "start_date": budget.start_date,
+        "end_date": budget.end_date,
+        "budget": budget.budget
+    }
+
+
+@router.get(
+    "/users/{user_id}/categories/{category_id}/budget/",
+    tags=["budgets"]
+)
+def list_budget(user_id: int, limit: int = 10, offset: int = 0):
+    """
+    This endpoint returns all the budget information associated with a user
+    For each budget, the following is returned:
+
+    - `budget_id`: the id of the budget
+    - `category_name`: the category the budget is associated with
+    - `start_date`: the designated start date of the budget
+    - `end_date`: the designated end date of the budget
+    - `amount`: the amount allocated for the budget
     """
     data = []
     with db.engine.connect() as conn:
-        user = get_user(user_id)
-        if budget_category_id:
-            category_user = get_category(user.user_id, budget_category_id)
-            expenses = conn.execute(
-                sqlalchemy.text('''
-                SELECT * FROM expense
-                WHERE category_id = :category_id
-                '''),
-                [{"user_id": user.user_id, "category_id": budget_category_id}]
-            ).fetchall()
-            expenses_list = []
-            for expense in expenses:
-                _, _, date_time, cost, description = expense
-                expenses_list.append({
-                    "date_time": date_time,
-                    "cost": cost,
-                    "item": description
-                })
-            data.append({
-                "budget_category_id": budget_category_id,
-                "budget_category": category_user.category_name,
-                "budget": category_user.monthly_budget,
-                "expenses": expenses_list,
-                "budget_delta": category_user.monthly_budget - sum(
-                    [expense["cost"] for expense in expenses_list]
-                )
-            })
-        else:
-            categories_user = conn.execute(
-                sqlalchemy.text(
-                    "SELECT * FROM budget_category WHERE user_id = :user_id"),
-                [{"user_id": user[0]}]
-            ).fetchall()
-            for category_user in categories_user:
-                expenses = conn.execute(
-                    sqlalchemy.text('''
-                    SELECT * FROM expense
-                    WHERE category_id = :category_id
-                    '''),
-                    [{"user_id": user.user_id,
-                      "category_id": category_user.category_id}]
-                ).fetchall()
-                expenses_list = []
-                for expense in expenses:
-                    _, _, date_time, cost, description = expense
-                    expenses_list.append({
-                        "date_time": date_time,
-                        "cost": cost,
-                        "item": description
-                    })
-                data.append({
-                    "budget_category_id": category_user.category_id,
-                    "budget_category": category_user.category_name,
-                    "budget": category_user.monthly_budget,
-                    "expenses": expenses_list,
-                    "budget_delta": category_user.monthly_budget - sum(
-                        [expense["cost"] for expense in expenses_list]
-                    )
-                })
+        budgets = conn.execute(sqlalchemy.text(
+            '''
+            SELECT b.budget_id, c.category_name,
+            b.start_date, b.end_date, b.budget amount FROM budget AS b
+            JOIN category AS c ON c.category_id = b.category_id
+            WHERE c.user_id = :user_id
+            LIMIT :limit
+            OFFSET :offset;
+            '''
+        ), {"user_id": user_id, "limit": limit, "offset": offset}).fetchall()
+    for budget in budgets:
+        data.append({
+            "budget_id": budget.budget_id,
+            "category_name": budget.category_name,
+            "start_date": budget.start_date,
+            "end_date": budget.end_date,
+            "amount_allocated": budget.amount
+        })
     return data
-
-
-class BudgetJson(BaseModel):
-    budget: float
-
-
-@router.post("/users/{user_id}/budget/{budget_category}/", tags=["budgets"])
-def set_budget(user_id: int, budget_category: str, budget: BudgetJson):
-    """
-    This endpoint adds or updates a category with a budget. It takes as input:
-
-    - `user_id`: the associated user for the budget
-    - `budget_category`: the user generated category to be created/updated
-    - `budget`: the dollar amount of the budget
-    """
-    with db.engine.connect() as conn:
-        user = get_user(user_id)
-        category_result = conn.execute(
-            sqlalchemy.text('''
-            SELECT * FROM budget_category
-            WHERE user_id = :user_id
-            AND category_name = :category_name
-            '''),
-            [{"user_id": user.user_id, "category_name": budget_category}]
-        ).fetchone()
-        if category_result is None:
-            inserted_category = conn.execute(
-                sqlalchemy.text('''
-                INSERT INTO budget_category
-                (category_name, user_id, monthly_budget)
-                VALUES (:category_name, :user_id, :monthly_budget)
-                RETURNING category_id
-                '''),
-                {"category_name": budget_category,
-                 "user_id": user_id, "monthly_budget": budget.budget}
-            )
-            category_id = inserted_category.fetchone().category_id
-            conn.commit()
-            return {
-                "category_id": category_id,
-                "category_name": budget_category,
-                "user_id": user.user_id,
-                "monthly_budget": budget.budget
-            }
-        else:
-            updated_category = conn.execute(
-                sqlalchemy.text('''
-                UPDATE budget_category
-                SET monthly_budget = :monthly_budget
-                WHERE category_id = :category_id
-                RETURNING category_id
-                '''),
-                [{"monthly_budget": budget.budget,
-                  "category_id": category_result.category_id}]
-            )
-            category_id = updated_category.fetchone().category_id
-            conn.commit()
-            return {
-                "category_id": category_id,
-                "category_name": budget_category,
-                "user_id": user.user_id,
-                "monthly_budget": budget.budget
-            }
