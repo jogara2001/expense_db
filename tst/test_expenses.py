@@ -18,7 +18,7 @@ def test_post_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/",
         json=new_category
     )
 
@@ -28,7 +28,7 @@ def test_post_expense():
         "description": "string"
     }
     expense_response = client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        f"/users/{user_id}/expenses/",
         json=new_expense
     )
 
@@ -36,32 +36,6 @@ def test_post_expense():
     assert expense_response.json()["category_id"] == new_expense["category_id"]
     assert expense_response.json()["description"] == new_expense["description"]
 
-
-def test_post_expense_wrong_password():
-    new_user = {
-        "name": str(uuid.uuid4()),
-        "password": "test_password",
-    }
-    user_response = client.post("/users/", json=new_user)
-    user_id = user_response.json()["user_id"]
-
-    new_category = {"category_name": "test_category"}
-    category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
-        json=new_category
-    )
-
-    new_expense = {
-        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
-        "category_id": category_response.json()["category_id"],
-        "description": "string"
-    }
-    expense_response = client.post(
-        f"/users/{user_id}/expenses/?password=wrong",
-        json=new_expense
-    )
-
-    assert expense_response.status_code == 401
 
 
 def test_get_expense():
@@ -74,7 +48,7 @@ def test_get_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/",
         json=new_category
     )
 
@@ -84,13 +58,13 @@ def test_get_expense():
         "description": "string"
     }
     expense_response = client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        f"/users/{user_id}/expenses/",
         json=new_expense
     )
     expense_id = expense_response.json()["expense_id"]
 
     get_expense_response = client.get(
-        f"/users/{user_id}/expenses/{expense_id}/?password={new_user['password']}"
+        f"/users/{user_id}/expenses/{expense_id}/"
     )
 
     assert get_expense_response.status_code == 200
@@ -106,47 +80,15 @@ def test_get_expense():
         "cost": 25,
     }
     client.post(
-        f"/users/{user_id}/expenses/{expense_id}/items?password={new_user['password']}",
+        f"/users/{user_id}/expenses/{expense_id}/items",
         json=new_item
     )
 
     get_expense_response = client.get(
-        f"/users/{user_id}/expenses/{expense_id}/?password={new_user['password']}"
+        f"/users/{user_id}/expenses/{expense_id}/"
     )
 
     assert get_expense_response.json()["cost"] == 25.0
-
-
-def test_get_expense_wrong_password():
-    new_user = {
-        "name": str(uuid.uuid4()),
-        "password": "test_password",
-    }
-    user_response = client.post("/users/", json=new_user)
-    user_id = user_response.json()["user_id"]
-
-    new_category = {"category_name": "test_category"}
-    category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
-        json=new_category
-    )
-
-    new_expense = {
-        "date_time": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
-        "category_id": category_response.json()["category_id"],
-        "description": "string"
-    }
-    expense_response = client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
-        json=new_expense
-    )
-    expense_id = expense_response.json()["expense_id"]
-
-    get_expense_response = client.get(
-        f"/users/{user_id}/expenses/{expense_id}/?password=wrong"
-    )
-
-    assert get_expense_response.status_code == 401
 
 
 def test_list_expense():
@@ -159,7 +101,7 @@ def test_list_expense():
 
     new_category = {"category_name": "test_category"}
     category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
+        f"/users/{user_id}/categories/",
         json=new_category
     )
 
@@ -169,7 +111,7 @@ def test_list_expense():
         "description": "string_1"
     }
     client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        f"/users/{user_id}/expenses/",
         json=new_expense_one
     )
 
@@ -179,7 +121,7 @@ def test_list_expense():
         "description": "string_2"
     }
     response_two = client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        f"/users/{user_id}/expenses/",
         json=new_expense_two
     )
 
@@ -189,12 +131,12 @@ def test_list_expense():
         "description": "string_3"
     }
     response_three = client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
+        f"/users/{user_id}/expenses/",
         json=new_expense_three
     )
 
     list_expense_response = client.get(
-        f"/users/{user_id}/expenses?password={new_user['password']}&limit=2&offset=1"
+        f"/users/{user_id}/expenses?limit=2&offset=1"
     )
 
     assert list_expense_response.status_code == 200
@@ -207,54 +149,3 @@ def test_list_expense():
     )[0]["description"] == new_expense_two["description"]
     assert list_expense_response.json(
     )[1]["description"] == new_expense_three["description"]
-
-
-def test_list_expense_wrong_password():
-    new_user = {
-        "name": str(uuid.uuid4()),
-        "password": "test_password",
-    }
-    user_response = client.post("/users/", json=new_user)
-    user_id = user_response.json()["user_id"]
-
-    new_category = {"category_name": "test_category"}
-    category_response = client.post(
-        f"/users/{user_id}/category/?password={new_user['password']}",
-        json=new_category
-    )
-
-    new_expense_one = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
-        "category_id": category_response.json()["category_id"],
-        "description": "string_1"
-    }
-    client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
-        json=new_expense_one
-    )
-
-    new_expense_two = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
-        "category_id": category_response.json()["category_id"],
-        "description": "string_2"
-    }
-    client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
-        json=new_expense_two
-    )
-
-    new_expense_three = {
-        "date_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
-        "category_id": category_response.json()["category_id"],
-        "description": "string_3"
-    }
-    client.post(
-        f"/users/{user_id}/expenses/?password={new_user['password']}",
-        json=new_expense_three
-    )
-
-    list_expense_response = client.get(
-        f"/users/{user_id}/expenses?password=wrong&limit=2&offset=1"
-    )
-
-    assert list_expense_response.status_code == 401

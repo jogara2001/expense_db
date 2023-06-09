@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from src import database as db
-from src.sql_utils import username_unique, authenticate
+from src.sql_utils import username_unique
 
 router = APIRouter()
 
@@ -52,34 +52,42 @@ def list_users(
 @router.get("/users/{user_id}/", tags=["users"])
 def get_user(
         user_id: int,
-        password: str
 ):
     """
     This endpoint returns the information associated with a user by its identifier.
 
     - `user_id`: the ID of the user
-    - `password`: the users password
     - `return`: the specified user
         - `user_id`: the ID of the user
         - `name`: the name of the user
         - `balance`: the total balance of their account
     """
 
-    authenticate(user_id, password)
-
     with db.engine.connect() as conn:
         user = conn.execute(
             sqlalchemy.text('''
-            select "user".user_id, "user".name, 
-            (COALESCE(sum(deposit.amount), 0.00) - COALESCE(sum(item.cost), 0.00)) 
-            as balance 
+            select deposits.user_id, deposits.name, deposits_sum - costs_sum as balance
+            from
+            
+            (select "user".user_id, "user".name, 
+            COALESCE(sum(deposit.amount), 0) as deposits_sum
+            from "user"
+            left JOIN deposit on deposit.user_id = "user".user_id
+            WHERE "user".user_id = :user_id
+            GROUP BY "user".user_id, "user".name) deposits
+            
+            join
+            
+            (select "user".user_id, "user".name,
+            COALESCE(sum(item.cost), 0) as costs_sum
             from "user"
             left JOIN category ON category.user_id = "user".user_id
             left JOIN expense ON expense.category_id = category.category_id
             left JOIN item on item.expense_id = expense.expense_id
-            left JOIN deposit on deposit.user_id = "user".user_id
             WHERE "user".user_id = :user_id
-            GROUP BY "user".user_id, "user".name
+            GROUP BY "user".user_id, "user".name) costs
+            
+            on deposits.user_id = costs.user_id
             '''),
             {"user_id": user_id}
         ).fetchone()
@@ -127,4 +135,35 @@ def create_user(user: UserJson):
     return {
         "user_id": user_id,
         "name": user.name,
+    }
+
+
+@router.post("/users/login", tags=["users"])
+def login_user(username: str, password: str):
+    """
+    Used to login users
+
+    - `username`: the username to log in with
+    - `password`: the password to log in with
+    """
+    with db.engine.connect() as conn:
+        users = conn.execute(
+            sqlalchemy.text('''
+            SELECT user_id from "user"
+            WHERE name = :user_name
+            AND hashed_pwd = extensions.crypt(:password, hashed_pwd)
+            '''),
+            {
+                "user_name": username,
+                "password": password
+            }
+        ).fetchall()
+        if len(users) != 1:
+            raise HTTPException(
+                status_code=401,
+                detail="username or password incorrect"
+            )
+
+    return {
+        "message": "Signed in"
     }

@@ -24,15 +24,14 @@ def test_users_by_id():
     assert postResponse.status_code == 200
     user_id = postResponse.json()["user_id"]
 
-    response = client.get(f"/users/{user_id}/?password={password}")
+    response = client.get(f"/users/{user_id}/")
     assert response.status_code == 200
     assert response.json() == {"user_id": user_id, "name": name, "balance": 0}
 
 
 def test_users_by_id2():
-    response = client.get("/users/99999999999/?password=password")
-    assert response.status_code == 401
-    assert response.json() == {'detail': 'password incorrect'}
+    response = client.get("/users/99999999999/")
+    assert response.status_code == 404
 
 
 def test_list_users():

@@ -20,72 +20,216 @@ contributers: jogara@calpoly.edu zlnavarr@calpoly.edu rnair02@calpoly.edu
 - As a customer, I want to be able to compare my spending to my budget, so that I can track my progress towards my goals
 
 ## Endpoints:
+### list_users
+`GET: /users/`
 
-### Get expense
-`GET: /user/{user_id}/expense/{expense_id}`
+    This lists the users (primarily used for debugging purposes)
 
-This endpoint returns the information associated with an expense by its identifier. For each expense it returns:
+    - `name`: filter for name of user
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+    - `return`: a list of users
 
-- `cost`: the monetary value of the expense, in Dollars
-- `date`: the date of the expense
-- `expense_id`: the ID of the item associated with the expense
-- `category`: the user defined category of the item
-- `description`: the user defined description of the item
+### get_user
+`GET: /users/{user_id}/`
 
-### Get expenses over time
-`GET: /user/{user_id}/expenses/`
+    This endpoint returns the information associated with a user by its identifier.
 
-This endpoint returns the information associated with expenses over a defined time period. By default, the difference between `start_time` and `end_time` is one week and `end_time` is today. For each expense, it returns:
+    - `user_id`: the ID of the user
+    - `return`: the specified user
+        - `user_id`: the ID of the user
+        - `name`: the name of the user
+        - `balance`: the total balance of their account
 
-- `cost`: the monetary value of the expense, in dollars
-- `date`: the date of the expense
-- `expense_id`: the ID of the item associated with the expense
-- `category`: the user-defined category of the item
-- `budget_delta`: a number showing the difference between current money spent in the category and the budget in place
+### create_user
+`POST: /users/`
 
-### Get Budget
-`GET: /user/{user_id}/budget/{category_id}`
+    This endpoint creates a new user.
 
-This endpoint returns the user's budget information. By default, it will return all the user's budget information for all categories.
+    - `user`: an object consisting of the following
+        - `name`: the name of the user (must be unique)
+        - `password`: the password for the user
+    - `return`: the resulting user entry
 
-- `category`: the user-defined name of a specific category
-- `budget`: the budget associated with the category
-- `expenses`: the expenses associated with each category
-- `budget_delta`: a number showing the difference between current money spent in the category and the budget in place
+### login_user
+`POST: /users/login`
 
-Each expense is represented by a dictionary with the following keys:
+    Used to login users
+    
+    - `username`: the username to log in with
+    - `password`: the password to log in with
 
-- `cost`: the monetary value of the expense, in dollars
-- `item`: the item associated with the expense
-- `date`: the date of the expense
+### list_deposits
+`GET: /user/{user_id}/deposits/`
 
-### Set Budget
-`POST: /user/{user_id}/budget/{category}/`
+    This endpoint lists the deposits for a user
 
-This endpoint adds or updates a category with a budget. It takes as input:
+    - `user_id`: the user to query
+    - `password`: the password for the user
+    - `start_date`: the start date for the query (optional
+    - `end_date`: the end date for the query (optional)
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+    `return`: a list of deposits
 
-- `user`: the associated user for the budget
-- `category`: the user generated category to be created/updated
-- `budget`: the dollar amount of the budget
+    Each deposit is represented by
+    - `deposit_id`: the deposit
+    - `amount`: the amount of the deposit
+    - `timestamp`: the timestamp of the deposit
 
-### Add Expense
-`POST: /user/{user_id}/expense/`
+### add_deposit
+`POST: /user/{user_id}/deposits/`
 
-This endpoint adds a new expense to the database. This expense includes some required data and some optional data:
+    This endpoint adds a deposit to the user specified
 
-- `user`: the user who is adding the expense (required)
-- `cost`: the monetary value of the expense, in Dollars (required)
-- `date`: the date of the expense (required)
-- `category`: the user defined category of the item (not required)
-- `description`: the user defined description of the item (not required)
+    - `user_id`: the user to add the deposit to
+    - `deposit`: an object consisting of the following
+        - `amount`: the amount of the deposit
+        - `timestamp`: the timestamp of the deposit
+    return`: the resulting deposit entry
 
-## Edge Cases and Transaction Flow:
+### create_category
+`POST: /users/{user_id}/categories/`
 
-- Users should be required to include minimum data
-  - If users don’t include required fields in an API called an error message should be returned
-- Users should not be able to view or edit another user's information straight from an API call
-  - If this is attempted an error message should be returned
-- If a user attempts to create a category that already exists, it should instead update the existing category, rather than create duplicates
+    This endpoint creates a new category for a specific user.
+
+    - `user_id`: the id of the user
+    - `category_json`: object consisting of the following
+        - `category_name`: the name of the category to create
+
+### list_categories
+`GET: /users/{user_id}/categories`
+
+    This endpoint provides the list of categories associated with a user
+    
+    - `user_id`: the id of the associated user
+    - `limit`: the maximum number of results to return
+    - `offset`: the number of results to skip
+
+### get_category
+`GET: /users/{user_id}/categories/{category_id}`
+
+    This endpoint returns the details of a specific category
+    
+    - `user_id`: the id of the user associated with the category
+    - `category_id`: the id of the category to get
+
+### category_budget_percentage
+`GET: /users/{user_id}/category/budgets`
+
+    This endpoint returns the percentage of a user's overall allocated budget
+    on a per-category basis. Categories are ranked overall by percentage descending
+    
+    - `user_id`: the associated user
+
+### add_budget
+`POST: /users/{user_id}/categories/{category_id}/budget/`
+
+    This endpoint adds a budget to a category. It takes as input:
+
+    - `user_id`: the associated user for the budget
+    - `category_id`: the category to associate with the budget
+    - `budget_entry`: an object consisting of the following
+        - `budget`: the dollar amount of the budget
+        - `start_date`: The start date for the budget
+        - `end_date`: The end date for the budget
+
+### get_budget
+`GET: /users/{user_id}/categories/{category_id}/budget/{budget_id}/`
+
+    This endpoint returns a budget entry for a given budget_id. It takes as input:
+    
+    - `user_id`: the associated user for the budget
+    - `category_id`: the associated category for the budget
+    - `budget_id`: the budget_id
+
+### list_budget
+`GET: /users/{user_id}/categories/{category_id}/budget/`
+
+    This endpoint returns all the budget information associated with a user
+    For each budget, the following is returned:
+    
+    - `budget_id`: the id of the budget
+    - `category_name`: the category the budget is associated with
+    - `start_date`: the designated start date of the budget
+    - `end_date`: the designated end date of the budget
+    - `amount`: the amount allocated for the budget
+
+### get_expense
+`GET: /users/{user_id}/expenses/{expense_id}`
+
+    This endpoint returns the information associated with an expense by its identifier.
+    For each expense it returns:
+
+    - `cost`: the monetary value of the expense, in Dollars
+    - `date_time`: the date and time of the expense
+    - `expense_id`: the ID of the item associated with the expense
+    - `category`: the user defined category of the item
+    - `description`: the user defined description of the item
+
+### list_expenses
+`GET: /users/{user_id}/expenses`
+
+    This endpoint returns the information associated with expenses
+    over a defined time period.
+    By default, the difference between `start_date` and `end_date` is one week
+    and `end_time` is today.
+    Expects format "YYYY-MM-DD HH:MM:SS" for timestamp
+
+    For each expense, it returns:
+
+    - `cost`: the monetary value of the expense, in dollars
+    - `date`: the date of the expense
+    - `expense_id`: the ID of the item associated with the expense
+    - `category`: the user-defined category of the item
+
+### add_expense
+`POST: /users/{user_id}/expenses/`
+
+    This endpoint adds a new expense to the database.
+    This expense includes:
+
+    - `user`: the user who is adding the expense (required)
+    - `cost`: the monetary value of the expense, in Dollars (required)
+    - `date_time`: the date and time of the expense. (required)
+    - `category_id`: the budget category of the item (required)
+    - `description`: the user defined description of the item (not required)
+
+### get_item
+`GET: /users/{user_id}/expenses/{expense_id}/items/{item_id}`
+
+    This endpoint returns the information for a specific item
+    associated with a specific expense for a specific user.
+
+    - `user_id`: the id of the user
+    - `expense_id`: the id of the expense
+    - `item_id`: the id of the item
+    - `item_name`: the name of the item
+    - `cost`: the monetary value of the item, in dollars
+
+### list_items
+`GET: /users/{user_id}/expenses/{expense_id}/items`
+
+    This endpoint returns the information for all items
+    associated with a specific expense for a specific user.
+
+    - `user_id`: the id of the user
+    - `expense_id`: the id of the expense
+    - `item_id`: the id of the item
+    - `item_name`: the name of the item
+    - `cost`: the monetary value of the item, in dollars
+
+### create_item
+`/users/{user_id}/expenses/{expense_id}/items`
+
+    This endpoint creates a new item associated
+    with a specific expense for a specific user.
+
+    The columns that the item table has are:
+    - `item_id`: the id of the item
+    - `expense_id`: the id of the expense
+    - `cost`: the monetary value of the item, in dollars
+    - `name`: the name of the item
 
 ## ER Diagram
 ![ER_DIAGRAM](./ER_Diagram.jpeg)
